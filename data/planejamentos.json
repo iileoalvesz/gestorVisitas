@@ -1,0 +1,34 @@
+[
+  {
+    "id": "plan_20260130_001",
+    "semana_inicio": "2026-01-26",
+    "semana_fim": "2026-01-30",
+    "criado_em": "2026-01-30T23:50:07.674675",
+    "atualizado_em": "2026-01-30T23:51:36.885169",
+    "visitas_planejadas": [
+      {
+        "id": "vp_20260130235034",
+        "dia_semana": 5,
+        "data": "2026-01-31",
+        "escola_id": 4,
+        "escola_nome": "Bela Vista",
+        "turno": "manha",
+        "ordem": 1,
+        "observacoes": "XD",
+        "mediador_id": 1,
+        "mediador_nome": "Leonardo Alves de Oliveira",
+        "status": "planejado",
+        "visita_executada_id": null,
+        "criado_em": "2026-01-30T23:50:34.778851"
+      }
+    ]
+  },
+  {
+    "id": "plan_20260130_002",
+    "semana_inicio": "2026-02-02",
+    "semana_fim": "2026-02-06",
+    "criado_em": "2026-01-30T23:51:21.925338",
+    "atualizado_em": "2026-01-30T23:51:21.925342",
+    "visitas_planejadas": []
+  }
+]

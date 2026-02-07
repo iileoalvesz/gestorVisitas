@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block title %}Calcular Distâncias - Gestão de Visitas{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="bi bi-signpost-2"></i> Calcular Distâncias entre Escolas
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-calculator"></i> Calculadora de Rotas
+            </div>
+            <div class="card-body">
+                <form id="formDistancia">
+                    <div class="mb-3">
+                        <label for="escola1" class="form-label">
+                            <i class="bi bi-geo-alt-fill text-success"></i> Escola de Origem
+                        </label>
+                        <select class="form-select" id="escola1" name="escola1" required>
+                            <option value="">Selecione...</option>
+                            {% for escola in escolas %}
+                            <option value="{{ escola.id }}">{{ escola.nome_usual }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="escola2" class="form-label">
+                            <i class="bi bi-geo-alt-fill text-danger"></i> Escola de Destino
+                        </label>
+                        <select class="form-select" id="escola2" name="escola2" required>
+                            <option value="">Selecione...</option>
+                            {% for escola in escolas %}
+                            <option value="{{ escola.id }}">{{ escola.nome_usual }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-arrow-left-right"></i> Calcular Distância
+                        </button>
+                    </div>
+                </form>
+
+                <div id="resultado" class="mt-4"></div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-info-circle"></i> Como funciona?
+                </h6>
+                <ul class="small mb-0">
+                    <li>Usa OSRM (Open Source Routing Machine)</li>
+                    <li>Calcula rota real de carro (não em linha reta)</li>
+                    <li>Mostra distância em km e tempo estimado</li>
+                    <li>Considera o trânsito médio</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-list-ol"></i> Escolas Próximas
+            </div>
+            <div class="card-body">
+                <form id="formProximas">
+                    <div class="mb-3">
+                        <label for="escolaRef" class="form-label">
+                            Escola de Referência
+                        </label>
+                        <select class="form-select" id="escolaRef" name="escolaRef" required>
+                            <option value="">Selecione...</option>
+                            {% for escola in escolas %}
+                            <option value="{{ escola.id }}">{{ escola.nome_usual }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="limite" class="form-label">
+                            Quantas escolas mostrar?
+                        </label>
+                        <select class="form-select" id="limite" name="limite">
+                            <option value="3">3 escolas</option>
+                            <option value="5" selected>5 escolas</option>
+                            <option value="10">10 escolas</option>
+                        </select>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-search"></i> Buscar Próximas
+                        </button>
+                    </div>
+                </form>
+
+                <div id="resultadoProximas" class="mt-4"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Calcular distância entre duas escolas
+document.getElementById('formDistancia').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const escola1Id = parseInt(document.getElementById('escola1').value);
+    const escola2Id = parseInt(document.getElementById('escola2').value);
+    const resultado = document.getElementById('resultado');
+
+    if (escola1Id === escola2Id) {
+        resultado.innerHTML = `
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i> Selecione escolas diferentes!
+            </div>
+        `;
+        return;
+    }
+
+    resultado.innerHTML = `
+        <div class="alert alert-info">
+            <i class="bi bi-hourglass-split"></i> Calculando rota...
+        </div>
+    `;
+
+    try {
+        const response = await fetch('/api/distancia', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                escola1_id: escola1Id,
+                escola2_id: escola2Id
+            })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            resultado.innerHTML = `
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="bi bi-route"></i> Resultado
+                        </h5>
+                        <p class="mb-2">
+                            <strong>${data.escola1}</strong>
+                            <i class="bi bi-arrow-right"></i>
+                            <strong>${data.escola2}</strong>
+                        </p>
+                        <hr>
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <h3 class="text-primary">${data.distancia_km} km</h3>
+                                <small class="text-muted">Distância</small>
+                            </div>
+                            <div class="col-6">
+                                <h3 class="text-success">${data.duracao_minutos} min</h3>
+                                <small class="text-muted">Tempo</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            const error = await response.json();
+            resultado.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-x-circle"></i> Erro: ${error.erro}
+                </div>
+            `;
+        }
+    } catch (error) {
+        resultado.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-x-circle"></i> Erro: ${error.message}
+            </div>
+        `;
+    }
+});
+
+// Buscar escolas próximas
+document.getElementById('formProximas').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const escolaId = document.getElementById('escolaRef').value;
+    const limite = document.getElementById('limite').value;
+    const resultado = document.getElementById('resultadoProximas');
+
+    resultado.innerHTML = `
+        <div class="alert alert-info">
+            <i class="bi bi-hourglass-split"></i> Buscando escolas próximas...
+        </div>
+    `;
+
+    try {
+        const response = await fetch(`/api/escolas/${escolaId}/proximas?limite=${limite}`);
+
+        if (response.ok) {
+            const data = await response.json();
+
+            if (data.length === 0) {
+                resultado.innerHTML = `
+                    <div class="alert alert-warning">
+                        Nenhuma escola encontrada.
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '<div class="list-group">';
+            data.forEach((item, index) => {
+                html += `
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">${index + 1}. ${item.escola.nome_usual}</h6>
+                            <small class="text-primary">${item.distancia_km} km</small>
+                        </div>
+                        <small class="text-muted">
+                            <i class="bi bi-clock"></i> ${item.duracao_minutos} minutos
+                        </small>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            resultado.innerHTML = html;
+        } else {
+            const error = await response.json();
+            resultado.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-x-circle"></i> ${error.erro}
+                </div>
+            `;
+        }
+    } catch (error) {
+        resultado.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-x-circle"></i> Erro: ${error.message}
+            </div>
+        `;
+    }
+});
+</script>
+{% endblock %}

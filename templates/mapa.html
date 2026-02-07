@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Mapa das Escolas - Gestão de Visitas{% endblock %}
+
+{% block extra_css %}
+<style>
+#map {
+    height: 500px;
+    width: 100%;
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="bi bi-map"></i> Mapa Interativo das Escolas
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span><i class="bi bi-geo-alt"></i> {{ escolas|length }} escolas no Bloco 1</span>
+                <div class="d-flex align-items-center gap-2">
+                    <label class="mb-0 small"><i class="bi bi-funnel"></i> Filtrar:</label>
+                    <select class="form-select form-select-sm" id="filtroEscola" style="width: 280px;">
+                        <option value="">Todas as escolas</option>
+                        {% for escola in escolas %}
+                        <option value="{{ escola.id }}" data-lat="{{ escola.latitude }}" data-lng="{{ escola.longitude }}">{{ escola.nome_usual }}</option>
+                        {% endfor %}
+                    </select>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="resetarMapa()" title="Mostrar todas">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div id="map"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            <strong>Dica:</strong> Clique nos marcadores para ver informações da escola. Use o filtro para localizar uma escola específica.
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Inicializa mapa centrado em Taubaté
+const map = L.map('map').setView([-23.0265, -45.5555], 12);
+
+// Adiciona camada do OpenStreetMap
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map);
+
+// Dados das escolas
+const escolas = {{ escolas|tojson }};
+
+// Armazena marcadores para referencia
+const markers = {};
+
+// Adiciona marcadores
+escolas.forEach(escola => {
+    if (escola.latitude && escola.longitude) {
+        const marker = L.marker([escola.latitude, escola.longitude])
+            .addTo(map)
+            .bindPopup(`
+                <div class="text-center">
+                    <h6><i class="bi bi-building"></i> ${escola.nome_usual}</h6>
+                    <p class="small text-muted mb-2">${escola.nome_oficial}</p>
+                    ${escola.diretor ? `<p class="small mb-2"><i class="bi bi-person"></i> ${escola.diretor}</p>` : ''}
+                </div>
+            `);
+        markers[escola.id] = marker;
+    }
+});
+
+// Filtro de escolas
+document.getElementById('filtroEscola').addEventListener('change', function() {
+    const escolaId = this.value;
+
+    if (!escolaId) {
+        resetarMapa();
+        return;
+    }
+
+    const option = this.options[this.selectedIndex];
+    const lat = parseFloat(option.dataset.lat);
+    const lng = parseFloat(option.dataset.lng);
+
+    if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+        // Zoom na escola selecionada
+        map.setView([lat, lng], 16);
+
+        // Abre o popup do marcador
+        if (markers[parseInt(escolaId)]) {
+            markers[parseInt(escolaId)].openPopup();
+        }
+    }
+});
+
+// Resetar mapa para visão geral
+function resetarMapa() {
+    document.getElementById('filtroEscola').value = '';
+    map.setView([-23.0265, -45.5555], 12);
+    map.closePopup();
+}
+
+// Verifica se há parâmetros na URL para centralizar em uma escola específica
+const urlParams = new URLSearchParams(window.location.search);
+const lat = urlParams.get('lat');
+const lng = urlParams.get('lng');
+const escolaNome = urlParams.get('escola');
+const escolaIdParam = urlParams.get('escola_id');
+
+if (lat && lng) {
+    map.setView([parseFloat(lat), parseFloat(lng)], 15);
+
+    if (escolaNome) {
+        L.popup()
+            .setLatLng([parseFloat(lat), parseFloat(lng)])
+            .setContent(`<strong>${escolaNome}</strong>`)
+            .openOn(map);
+    }
+}
+
+// Se veio com escola_id na URL, seleciona no filtro
+if (escolaIdParam) {
+    document.getElementById('filtroEscola').value = escolaIdParam;
+    document.getElementById('filtroEscola').dispatchEvent(new Event('change'));
+}
+</script>
+{% endblock %}

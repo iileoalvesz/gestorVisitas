@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block title %}Escolas - Gestão de Visitas{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="mb-0">
+                <i class="bi bi-building"></i> Escolas do Bloco 1
+            </h1>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovaEscola">
+                <i class="bi bi-plus-circle"></i> Nova Escola
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-list"></i> Lista de Escolas ({{ escolas|length }} escolas)</span>
+                <a href="/mapa" class="btn btn-sm btn-primary">
+                    <i class="bi bi-map"></i> Ver no Mapa
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome Usual</th>
+                                <th>Nome Oficial</th>
+                                <th>Diretor(a)</th>
+                                <th class="text-center">Coordenadas</th>
+                                <th class="text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for escola in escolas %}
+                            <tr>
+                                <td><strong>{{ escola.id }}</strong></td>
+                                <td>
+                                    <i class="bi bi-building text-primary"></i>
+                                    {{ escola.nome_usual }}
+                                </td>
+                                <td class="text-muted">{{ escola.nome_oficial }}</td>
+                                <td>{{ escola.diretor or '-' }}</td>
+                                <td class="text-center">
+                                    {% if escola.latitude and escola.longitude %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle"></i> Sim
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning">
+                                            <i class="bi bi-x-circle"></i> Não
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-secondary" onclick="editarEscola({{ escola.id }}, '{{ escola.nome_oficial|e }}', '{{ escola.nome_usual|e }}', '{{ escola.diretor|default('', true)|e }}')" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <a href="/visitas/nova?escola_id={{ escola.id }}" class="btn btn-outline-primary" title="Registrar Visita">
+                                            <i class="bi bi-plus-circle"></i>
+                                        </a>
+                                        {% if escola.latitude and escola.longitude %}
+                                        <button class="btn btn-outline-success" onclick="verNoMapa({{ escola.latitude }}, {{ escola.longitude }}, '{{ escola.nome_usual }}')" title="Ver no Mapa">
+                                            <i class="bi bi-geo-alt"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+<!-- Modal Nova Escola -->
+<div class="modal fade" id="modalNovaEscola" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-building-add"></i> Nova Escola</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formNovaEscola">
+                    <div class="mb-3">
+                        <label for="nomeOficial" class="form-label">Nome Oficial <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="nomeOficial" required placeholder="Ex: EMEF Prof. João da Silva">
+                    </div>
+                    <div class="mb-3">
+                        <label for="nomeUsual" class="form-label">Nome Usual <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="nomeUsual" required placeholder="Ex: João Silva">
+                    </div>
+                    <div class="mb-3">
+                        <label for="diretor" class="form-label">Diretor(a)</label>
+                        <input type="text" class="form-control" id="diretor" placeholder="Nome do(a) diretor(a)">
+                    </div>
+                </form>
+                <div id="alertNovaEscola"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarNovaEscola()">
+                    <i class="bi bi-check-circle"></i> Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Escola -->
+<div class="modal fade" id="modalEditarEscola" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil"></i> Editar Escola</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEditarEscola">
+                    <input type="hidden" id="editEscolaId">
+                    <div class="mb-3">
+                        <label for="editNomeOficial" class="form-label">Nome Oficial <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="editNomeOficial" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editNomeUsual" class="form-label">Nome Usual <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="editNomeUsual" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editDiretor" class="form-label">Diretor(a)</label>
+                        <input type="text" class="form-control" id="editDiretor">
+                    </div>
+                </form>
+                <div id="alertEditarEscola"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="atualizarEscola()">
+                    <i class="bi bi-check-circle"></i> Atualizar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+function verNoMapa(lat, lng, nome) {
+    window.location.href = `/mapa?lat=${lat}&lng=${lng}&escola=${encodeURIComponent(nome)}`;
+}
+
+async function salvarNovaEscola() {
+    const data = {
+        nome_oficial: document.getElementById('nomeOficial').value,
+        nome_usual: document.getElementById('nomeUsual').value,
+        diretor: document.getElementById('diretor').value
+    };
+
+    if (!data.nome_oficial || !data.nome_usual) {
+        document.getElementById('alertNovaEscola').innerHTML =
+            '<div class="alert alert-warning">Nome oficial e nome usual são obrigatórios.</div>';
+        return;
+    }
+
+    const alert = document.getElementById('alertNovaEscola');
+    alert.innerHTML = '<div class="alert alert-info">Salvando...</div>';
+
+    try {
+        const response = await fetch('/api/escolas', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            alert.innerHTML = '<div class="alert alert-success">Escola cadastrada com sucesso!</div>';
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            const error = await response.json();
+            alert.innerHTML = `<div class="alert alert-danger">Erro: ${error.erro}</div>`;
+        }
+    } catch (error) {
+        alert.innerHTML = `<div class="alert alert-danger">Erro: ${error.message}</div>`;
+    }
+}
+
+function editarEscola(id, nomeOficial, nomeUsual, diretor) {
+    document.getElementById('editEscolaId').value = id;
+    document.getElementById('editNomeOficial').value = nomeOficial;
+    document.getElementById('editNomeUsual').value = nomeUsual;
+    document.getElementById('editDiretor').value = diretor || '';
+
+    const modal = new bootstrap.Modal(document.getElementById('modalEditarEscola'));
+    modal.show();
+}
+
+async function atualizarEscola() {
+    const id = document.getElementById('editEscolaId').value;
+    const data = {
+        nome_oficial: document.getElementById('editNomeOficial').value,
+        nome_usual: document.getElementById('editNomeUsual').value,
+        diretor: document.getElementById('editDiretor').value
+    };
+
+    if (!data.nome_oficial || !data.nome_usual) {
+        document.getElementById('alertEditarEscola').innerHTML =
+            '<div class="alert alert-warning">Nome oficial e nome usual são obrigatórios.</div>';
+        return;
+    }
+
+    const alert = document.getElementById('alertEditarEscola');
+    alert.innerHTML = '<div class="alert alert-info">Atualizando...</div>';
+
+    try {
+        const response = await fetch(`/api/escolas/${id}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            alert.innerHTML = '<div class="alert alert-success">Escola atualizada com sucesso!</div>';
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            const error = await response.json();
+            alert.innerHTML = `<div class="alert alert-danger">Erro: ${error.erro}</div>`;
+        }
+    } catch (error) {
+        alert.innerHTML = `<div class="alert alert-danger">Erro: ${error.message}</div>`;
+    }
+}
+</script>
+{% endblock %}

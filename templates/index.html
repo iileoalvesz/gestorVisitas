@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Gestão de Visitas{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="page-header text-center mb-4">
+        <h1 class="page-title justify-content-center">
+            <i class="bi bi-speedometer2"></i> Dashboard
+        </h1>
+        <p class="text-muted mb-0">Visão geral do sistema de gestão de visitas escolares</p>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3 col-6">
+            <div class="stats-card" style="border-left-color: #667eea;">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stats-label">Total de Visitas</div>
+                        <div class="stats-number">{{ stats.total_visitas }}</div>
+                    </div>
+                    <div class="stats-icon">
+                        <i class="bi bi-calendar-check-fill" style="color: #667eea;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="stats-card" style="border-left-color: #10B981;">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stats-label">Escolas Visitadas</div>
+                        <div class="stats-number">{{ stats.total_escolas_visitadas }}</div>
+                    </div>
+                    <div class="stats-icon">
+                        <i class="bi bi-building-check" style="color: #10B981;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="stats-card" style="border-left-color: #F59E0B;">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stats-label">Pendentes</div>
+                        <div class="stats-number">{{ escolas_sem_visita }}</div>
+                    </div>
+                    <div class="stats-icon">
+                        <i class="bi bi-exclamation-triangle-fill" style="color: #F59E0B;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="stats-card" style="border-left-color: #3B82F6;">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stats-label">Total Escolas</div>
+                        <div class="stats-number">{{ total_escolas }}</div>
+                    </div>
+                    <div class="stats-icon">
+                        <i class="bi bi-building-fill" style="color: #3B82F6;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menus Principais -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-4 col-md-6">
+            <a href="/agenda" class="text-decoration-none">
+                <div class="menu-card">
+                    <i class="bi bi-calendar-week-fill" style="color: #2563eb;"></i>
+                    <h3>Agenda</h3>
+                    <p>Planeje e gerencie visitas, reuniões e eventos</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+            <a href="/escolas" class="text-decoration-none">
+                <div class="menu-card">
+                    <i class="bi bi-building-fill" style="color: #3B82F6;"></i>
+                    <h3>Escolas</h3>
+                    <p>Gerenciar {{ total_escolas }} escolas e diretores do Bloco 1</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+            <a href="/mediadores" class="text-decoration-none">
+                <div class="menu-card">
+                    <i class="bi bi-people-fill" style="color: #EF4444;"></i>
+                    <h3>Mediadores</h3>
+                    <p>Cadastre e gerencie mediadores responsáveis pelas visitas</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+            <a href="/mapa" class="text-decoration-none">
+                <div class="menu-card">
+                    <i class="bi bi-map-fill" style="color: #06B6D4;"></i>
+                    <h3>Mapa Interativo</h3>
+                    <p>Visualize a localização de todas as escolas no mapa</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+            <a href="/distancias" class="text-decoration-none">
+                <div class="menu-card">
+                    <i class="bi bi-signpost-2-fill" style="color: #8B5CF6;"></i>
+                    <h3>Distâncias</h3>
+                    <p>Calcule distâncias e rotas entre as escolas</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+            <a href="/relatorios" class="text-decoration-none">
+                <div class="menu-card">
+                    <i class="bi bi-file-earmark-text-fill" style="color: #F59E0B;"></i>
+                    <h3>Relatórios</h3>
+                    <p>Gere relatórios em Excel, Word e TXT</p>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Informações Rápidas -->
+    {% if stats.escola_mais_visitada %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-star-fill"></i> Destaques
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <div class="d-flex align-items-start">
+                                <i class="bi bi-trophy-fill text-warning me-3" style="font-size: 2.5rem;"></i>
+                                <div>
+                                    <h6 class="text-muted mb-1">Escola Mais Visitada</h6>
+                                    <h4 class="text-primary mb-1">{{ stats.escola_mais_visitada }}</h4>
+                                    <p class="text-muted mb-0">{{ stats.max_visitas_escola }} visita{% if stats.max_visitas_escola != 1 %}s{% endif %} registrada{% if stats.max_visitas_escola != 1 %}s{% endif %}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start">
+                                <i class="bi bi-calendar-event-fill text-info me-3" style="font-size: 2.5rem;"></i>
+                                <div>
+                                    <h6 class="text-muted mb-1">Atividade Recente</h6>
+                                    <h5 class="mb-1">{{ stats.total_visitas }} visitas</h5>
+                                    <p class="text-muted mb-0">Registradas em {{ stats.visitas_por_mes|length }} mês(es) de atividade</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

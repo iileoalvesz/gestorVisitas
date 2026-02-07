@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Visitas - Gestão de Visitas{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="mb-0">
+                <i class="bi bi-calendar-check"></i> Visitas Registradas
+            </h1>
+            <a href="/visitas/nova" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nova Visita
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form id="formFiltros" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Escola</label>
+                        <select class="form-select" id="filtroEscola">
+                            <option value="">Todas as escolas</option>
+                            {% for visita in visitas %}
+                                <option value="{{ visita.escola_nome }}">{{ visita.escola_nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Data Início</label>
+                        <input type="date" class="form-control" id="filtroDataInicio">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Data Fim</label>
+                        <input type="date" class="form-control" id="filtroDataFim">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-secondary w-100" onclick="limparFiltros()">
+                            <i class="bi bi-x-circle"></i> Limpar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Visitas -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-list"></i> Total: <span id="totalVisitas">{{ visitas|length }}</span> visita(s)
+            </div>
+            <div class="card-body">
+                {% if visitas %}
+                <div class="table-responsive">
+                    <table class="table table-hover" id="tabelaVisitas">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Hora</th>
+                                <th>Escola</th>
+                                <th>Observações</th>
+                                <th class="text-center">Anexos</th>
+                                <th class="text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for visita in visitas %}
+                            <tr data-escola="{{ visita.escola_nome }}" data-data="{{ visita.data }}">
+                                <td>
+                                    <i class="bi bi-calendar"></i>
+                                    {{ visita.data }}
+                                </td>
+                                <td>
+                                    <i class="bi bi-clock"></i>
+                                    {{ visita.hora }}
+                                </td>
+                                <td>
+                                    <strong>{{ visita.escola_nome }}</strong>
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        {{ visita.observacoes[:50] }}{% if visita.observacoes|length > 50 %}...{% endif %}
+                                    </small>
+                                </td>
+                                <td class="text-center">
+                                    {% if visita.anexos %}
+                                        <span class="badge bg-info">
+                                            <i class="bi bi-paperclip"></i> {{ visita.anexos|length }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <a href="/visitas/{{ visita.id }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> Ver
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+                    <p class="text-muted mt-3">Nenhuma visita registrada ainda.</p>
+                    <a href="/visitas/nova" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Registrar Primeira Visita
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Filtragem de visitas
+function filtrarVisitas() {
+    const escola = document.getElementById('filtroEscola').value.toLowerCase();
+    const dataInicio = document.getElementById('filtroDataInicio').value;
+    const dataFim = document.getElementById('filtroDataFim').value;
+
+    const linhas = document.querySelectorAll('#tabelaVisitas tbody tr');
+    let count = 0;
+
+    linhas.forEach(linha => {
+        const linhaEscola = linha.getAttribute('data-escola').toLowerCase();
+        const linhaData = linha.getAttribute('data-data');
+
+        let mostrar = true;
+
+        if (escola && !linhaEscola.includes(escola)) {
+            mostrar = false;
+        }
+
+        if (dataInicio && linhaData < dataInicio) {
+            mostrar = false;
+        }
+
+        if (dataFim && linhaData > dataFim) {
+            mostrar = false;
+        }
+
+        linha.style.display = mostrar ? '' : 'none';
+        if (mostrar) count++;
+    });
+
+    document.getElementById('totalVisitas').textContent = count;
+}
+
+function limparFiltros() {
+    document.getElementById('filtroEscola').value = '';
+    document.getElementById('filtroDataInicio').value = '';
+    document.getElementById('filtroDataFim').value = '';
+    filtrarVisitas();
+}
+
+// Adiciona eventos de filtro
+document.getElementById('filtroEscola').addEventListener('change', filtrarVisitas);
+document.getElementById('filtroDataInicio').addEventListener('change', filtrarVisitas);
+document.getElementById('filtroDataFim').addEventListener('change', filtrarVisitas);
+
+// Remove duplicatas do select de escolas
+const selectEscola = document.getElementById('filtroEscola');
+const escolasUnicas = new Set();
+Array.from(selectEscola.options).forEach(option => {
+    if (option.value && escolasUnicas.has(option.value)) {
+        option.remove();
+    } else if (option.value) {
+        escolasUnicas.add(option.value);
+    }
+});
+</script>
+{% endblock %}

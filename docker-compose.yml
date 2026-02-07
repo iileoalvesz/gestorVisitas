@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  gestor-visitas:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gestor_visitas_escolas
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=${SECRET_KEY:-minha-chave-secreta-producao}
+    volumes:
+      # Persistir dados JSON
+      - ./data:/app/data
+      # Persistir uploads e anexos
+      - ./static/uploads:/app/static/uploads
+      - ./anexos:/app/anexos
+      # Persistir relatórios gerados
+      - ./relatorios:/app/relatorios
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:5000/api/estatisticas', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Servico opcional para desenvolvimento
+  gestor-visitas-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gestor_visitas_dev
+    profiles:
+      - dev
+    ports:
+      - "5001:5000"
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+    volumes:
+      - ./:/app
+    command: ["python", "app.py"]

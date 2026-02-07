@@ -1,0 +1,12 @@
+[
+  {
+    "id": 1,
+    "nome": "Leonardo Alves de Oliveira",
+    "cargo": "Diretor",
+    "telefone": "11970489087",
+    "email": "ileoalvesz@hotmail.com",
+    "escola_id": 4,
+    "escola_nome": "Bela Vista",
+    "ativo": true
+  }
+]

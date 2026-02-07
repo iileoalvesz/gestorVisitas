@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Mediadores - Gestão de Visitas{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">
+                    <i class="bi bi-people-fill"></i> Mediadores
+                </h1>
+                <p class="text-muted mb-0">Gerencie os mediadores responsáveis pelas visitas</p>
+            </div>
+            <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#modalNovoMediador">
+                <i class="bi bi-plus-circle"></i> Novo Mediador
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-list"></i> Lista de Mediadores ({{ mediadores|length }})
+                </div>
+                <div class="card-body">
+                    {% if mediadores %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Escola</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for mediador in mediadores %}
+                                <tr>
+                                    <td>
+                                        <i class="bi bi-person-fill text-primary"></i>
+                                        <strong>{{ mediador.nome }}</strong>
+                                    </td>
+                                    <td>
+                                        {% if mediador.escola_nome %}
+                                        <i class="bi bi-building text-success"></i> {{ mediador.escola_nome }}
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if mediador.ativo %}
+                                        <span class="badge bg-success">Ativo</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inativo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="editarMediador({{ mediador.id }}, '{{ mediador.nome }}', {{ mediador.escola_id or 'null' }}, '{{ mediador.escola_nome or '' }}')">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-people" style="font-size: 3rem; color: #ccc;"></i>
+                        <p class="text-muted mt-3">Nenhum mediador cadastrado ainda.</p>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoMediador">
+                            <i class="bi bi-plus-circle"></i> Cadastrar Primeiro Mediador
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Novo Mediador -->
+<div class="modal fade" id="modalNovoMediador" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-person-plus"></i> Novo Mediador</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formNovoMediador">
+                    <div class="mb-3">
+                        <label for="nome" class="form-label">Nome Completo <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="nome" name="nome" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="escola_id" class="form-label">Escola Vinculada</label>
+                        <select class="form-select" id="escola_id" name="escola_id">
+                            <option value="">Selecione uma escola (opcional)...</option>
+                            {% for escola in escolas %}
+                            <option value="{{ escola.id }}">{{ escola.nome_usual }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">Escola onde o mediador atua</small>
+                    </div>
+                </form>
+                <div id="alertMediador"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarMediador()">
+                    <i class="bi bi-check-circle"></i> Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Mediador -->
+<div class="modal fade" id="modalEditarMediador" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil"></i> Editar Mediador</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEditarMediador">
+                    <input type="hidden" id="editMediadorId">
+                    <div class="mb-3">
+                        <label for="editNome" class="form-label">Nome Completo</label>
+                        <input type="text" class="form-control" id="editNome">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editEscolaId" class="form-label">Escola Vinculada</label>
+                        <select class="form-select" id="editEscolaId" name="editEscolaId">
+                            <option value="">Selecione uma escola (opcional)...</option>
+                            {% for escola in escolas %}
+                            <option value="{{ escola.id }}">{{ escola.nome_usual }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">Escola onde o mediador atua</small>
+                    </div>
+                </form>
+                <div id="alertEditMediador"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="atualizarMediador()">
+                    <i class="bi bi-check-circle"></i> Atualizar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function salvarMediador() {
+    const form = document.getElementById('formNovoMediador');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
+
+    // Converte escola_id para número ou null
+    if (data.escola_id) {
+        data.escola_id = parseInt(data.escola_id);
+    } else {
+        data.escola_id = null;
+    }
+
+    const alert = document.getElementById('alertMediador');
+    alert.innerHTML = '<div class="alert alert-info">Salvando...</div>';
+
+    try {
+        const response = await fetch('/api/mediadores', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            alert.innerHTML = '<div class="alert alert-success">Mediador cadastrado com sucesso!</div>';
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            const error = await response.json();
+            alert.innerHTML = `<div class="alert alert-danger">Erro: ${error.erro}</div>`;
+        }
+    } catch (error) {
+        alert.innerHTML = `<div class="alert alert-danger">Erro: ${error.message}</div>`;
+    }
+}
+
+function editarMediador(id, nome, escola_id, escola_nome) {
+    document.getElementById('editMediadorId').value = id;
+    document.getElementById('editNome').value = nome;
+    document.getElementById('editEscolaId').value = escola_id || '';
+
+    const modal = new bootstrap.Modal(document.getElementById('modalEditarMediador'));
+    modal.show();
+}
+
+async function atualizarMediador() {
+    const id = document.getElementById('editMediadorId').value;
+    const escolaId = document.getElementById('editEscolaId').value;
+
+    const data = {
+        nome: document.getElementById('editNome').value,
+        escola_id: escolaId ? parseInt(escolaId) : null
+    };
+
+    const alert = document.getElementById('alertEditMediador');
+    alert.innerHTML = '<div class="alert alert-info">Atualizando...</div>';
+
+    try {
+        const response = await fetch(`/api/mediadores/${id}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            alert.innerHTML = '<div class="alert alert-success">Mediador atualizado!</div>';
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            const error = await response.json();
+            alert.innerHTML = `<div class="alert alert-danger">Erro: ${error.erro}</div>`;
+        }
+    } catch (error) {
+        alert.innerHTML = `<div class="alert alert-danger">Erro: ${error.message}</div>`;
+    }
+}
+</script>
+{% endblock %}

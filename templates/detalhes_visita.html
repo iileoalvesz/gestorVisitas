@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Detalhes da Visita - {{ visita.escola_nome }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Início</a></li>
+                <li class="breadcrumb-item"><a href="/visitas">Visitas</a></li>
+                <li class="breadcrumb-item active">{{ visita.id }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-calendar-check"></i> Detalhes da Visita
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5><i class="bi bi-building"></i> Escola</h5>
+                        <p class="lead">{{ visita.escola_nome }}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h5><i class="bi bi-calendar"></i> Data</h5>
+                        <p class="lead">{{ visita.data }}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h5><i class="bi bi-clock"></i> Hora</h5>
+                        <p class="lead">{{ visita.hora }}</p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row">
+                    <div class="col-12">
+                        <h5><i class="bi bi-chat-text"></i> Observações</h5>
+                        {% if visita.observacoes %}
+                            <div class="alert alert-light">
+                                {{ visita.observacoes }}
+                            </div>
+                        {% else %}
+                            <p class="text-muted">Nenhuma observação registrada.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if visita.anexos %}
+                <hr>
+                <div class="row">
+                    <div class="col-12">
+                        <h5><i class="bi bi-paperclip"></i> Anexos/Evidências ({{ visita.anexos|length }})</h5>
+                        <div class="row">
+                            {% for anexo in visita.anexos %}
+                            <div class="col-md-4 mb-3">
+                                <div class="card">
+                                    <div class="card-body text-center">
+                                        {% if anexo.nome_original.lower().endswith(('.jpg', '.jpeg', '.png')) %}
+                                            <i class="bi bi-file-image text-success" style="font-size: 3rem;"></i>
+                                        {% elif anexo.nome_original.lower().endswith('.pdf') %}
+                                            <i class="bi bi-file-pdf text-danger" style="font-size: 3rem;"></i>
+                                        {% else %}
+                                            <i class="bi bi-file-earmark text-primary" style="font-size: 3rem;"></i>
+                                        {% endif %}
+                                        <p class="mt-2 mb-1"><strong>{{ anexo.nome_original }}</strong></p>
+                                        <small class="text-muted">{{ anexo.timestamp[:10] }}</small>
+                                        <div class="mt-2">
+                                            <a href="/{{ anexo.caminho }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                                <i class="bi bi-download"></i> Baixar
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <hr>
+
+                <div class="row">
+                    <div class="col-12">
+                        <p class="text-muted small">
+                            <i class="bi bi-info-circle"></i>
+                            ID da Visita: {{ visita.id }} |
+                            Criado em: {{ visita.criado_em }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="/visitas" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+                <a href="/visitas/nova?escola_id={{ visita.escola_id }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Nova Visita nesta Escola
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
