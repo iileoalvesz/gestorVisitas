@@ -17,6 +17,7 @@ WORKDIR /app
 # Instalar dependências do sistema
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
+    gosu \
     && rm -rf /var/lib/apt/lists/*
 
 # Copiar requirements e instalar dependências Python
@@ -33,7 +34,10 @@ RUN mkdir -p data static/uploads anexos relatorios templates_word
 # Criar usuário não-root para segurança
 RUN adduser --disabled-password --gecos '' appuser \
     && chown -R appuser:appuser /app
-USER appuser
+
+# Copiar e dar permissao ao entrypoint
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 # Expor porta
 EXPOSE 5000
@@ -42,5 +46,5 @@ EXPOSE 5000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:5000/health', timeout=5)" || exit 1
 
-# Comando para iniciar a aplicação com Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--timeout", "120", "app:app"]
+# Entrypoint corrige permissoes dos volumes e inicia como appuser
+ENTRYPOINT ["/entrypoint.sh"]
