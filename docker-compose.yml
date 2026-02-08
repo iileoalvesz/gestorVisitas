@@ -3,9 +3,7 @@ version: '3.8'
 services:
   # Backend Flask - Sistema de Visitas
   gestor-visitas:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/iileoalvesz/gestorvisitas:latest
     container_name: gestor_visitas_escolas
     volumes:
       - ./data:/app/data
