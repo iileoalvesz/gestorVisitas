@@ -1,8 +1,9 @@
 """
 Aplicação Web Flask - Sistema de Gestão de Visitas às Escolas
 """
-from flask import Flask, render_template, request, jsonify, send_file, redirect, url_for
+from flask import Flask, render_template, request, jsonify, send_file, redirect, url_for, flash
 from flask_cors import CORS
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 import os
 from datetime import datetime
@@ -14,12 +15,20 @@ from distancias import CalculadorDistancias
 from relatorios import GeradorRelatorios
 from mediadores import GerenciadorMediadores
 from planejamento import GerenciadorPlanejamentos
+from usuarios import GerenciadorUsuarios
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'dev-secret-key-change-in-production'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 CORS(app)
+
+# Configuracao de autenticacao
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.login_message = 'Por favor, faca login para acessar esta pagina.'
+login_manager.login_message_category = 'warning'
 
 # Inicializa gerenciadores
 gerenciador_escolas = GerenciadorEscolas()
@@ -28,6 +37,8 @@ gerenciador_mediadores = GerenciadorMediadores()
 gerenciador_planejamentos = GerenciadorPlanejamentos()
 calculador_distancias = CalculadorDistancias()
 gerador_relatorios = GeradorRelatorios()
+gerenciador_usuarios = GerenciadorUsuarios()
+gerenciador_usuarios.inicializar_admin()
 
 # Configurações
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf', 'doc', 'docx'}
@@ -38,9 +49,63 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+# ==================== AUTENTICACAO ====================
+
+@login_manager.user_loader
+def load_user(user_id):
+    return gerenciador_usuarios.obter_por_id(user_id)
+
+
+@login_manager.unauthorized_handler
+def unauthorized():
+    """Retorna 401 para APIs, redireciona para login para paginas"""
+    if request.path.startswith('/api/'):
+        return jsonify({'erro': 'Autenticacao necessaria'}), 401
+    return redirect(url_for('login', next=request.url))
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """Pagina de login"""
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        senha = request.form.get('password', '')
+        lembrar = request.form.get('lembrar') == 'on'
+
+        usuario = gerenciador_usuarios.obter_por_username(username)
+
+        if usuario and usuario.verificar_senha(senha):
+            login_user(usuario, remember=lembrar)
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('index'))
+        else:
+            flash('Usuario ou senha invalidos.', 'danger')
+
+    return render_template('login.html')
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    """Logout do usuario"""
+    logout_user()
+    flash('Voce saiu do sistema com sucesso.', 'success')
+    return redirect(url_for('login'))
+
+
+@app.route('/health')
+def health():
+    """Healthcheck endpoint (publico, sem autenticacao)"""
+    return jsonify({'status': 'ok'}), 200
+
+
 # ==================== ROTAS DE PÁGINAS ====================
 
 @app.route('/')
+@login_required
 def index():
     """Página inicial / Dashboard"""
     stats = gerenciador_visitas.obter_estatisticas()
@@ -57,6 +122,7 @@ def index():
 
 
 @app.route('/escolas')
+@login_required
 def escolas():
     """Página de listagem de escolas"""
     escolas_bloco1 = gerenciador_escolas.listar_escolas_bloco1()
@@ -64,6 +130,7 @@ def escolas():
 
 
 @app.route('/visitas')
+@login_required
 def visitas():
     """Página de listagem de visitas"""
     todas_visitas = gerenciador_visitas.listar_visitas()
@@ -71,6 +138,7 @@ def visitas():
 
 
 @app.route('/visitas/nova')
+@login_required
 def nova_visita():
     """Página para registrar nova visita"""
     escolas_bloco1 = gerenciador_escolas.listar_escolas_bloco1()
@@ -79,6 +147,7 @@ def nova_visita():
 
 
 @app.route('/visitas/<visita_id>')
+@login_required
 def detalhes_visita(visita_id):
     """Página de detalhes de uma visita"""
     visita = gerenciador_visitas.obter_visita(visita_id)
@@ -88,6 +157,7 @@ def detalhes_visita(visita_id):
 
 
 @app.route('/distancias')
+@login_required
 def distancias():
     """Página de cálculo de distâncias"""
     escolas_bloco1 = gerenciador_escolas.listar_escolas_bloco1()
@@ -95,12 +165,14 @@ def distancias():
 
 
 @app.route('/relatorios')
+@login_required
 def relatorios():
     """Página de relatórios"""
     return render_template('relatorios.html')
 
 
 @app.route('/mapa')
+@login_required
 def mapa():
     """Página com mapa das escolas"""
     escolas_bloco1 = gerenciador_escolas.listar_escolas_bloco1()
@@ -110,6 +182,7 @@ def mapa():
 
 
 @app.route('/mediadores')
+@login_required
 def mediadores():
     """Página de gerenciamento de mediadores"""
     todos_mediadores = gerenciador_mediadores.listar_mediadores(apenas_ativos=False)
@@ -119,6 +192,7 @@ def mediadores():
 
 @app.route('/agenda')
 @app.route('/agenda/<data>')
+@login_required
 def agenda(data=None):
     """Pagina de agenda semanal para planejamento de visitas"""
     escolas_bloco1 = gerenciador_escolas.listar_escolas_bloco1()
@@ -129,6 +203,7 @@ def agenda(data=None):
 # ==================== API ENDPOINTS ====================
 
 @app.route('/api/escolas')
+@login_required
 def api_escolas():
     """API: Lista escolas do Bloco 1"""
     escolas_bloco1 = gerenciador_escolas.listar_escolas_bloco1()
@@ -136,6 +211,7 @@ def api_escolas():
 
 
 @app.route('/api/escolas/<int:escola_id>')
+@login_required
 def api_escola_detalhes(escola_id):
     """API: Detalhes de uma escola"""
     for escola in gerenciador_escolas.escolas:
@@ -145,6 +221,7 @@ def api_escola_detalhes(escola_id):
 
 
 @app.route('/api/escolas/<int:escola_id>', methods=['PUT'])
+@login_required
 def api_atualizar_escola(escola_id):
     """API: Atualiza dados de uma escola"""
     try:
@@ -164,6 +241,7 @@ def api_atualizar_escola(escola_id):
 
 
 @app.route('/api/escolas', methods=['POST'])
+@login_required
 def api_criar_escola():
     """API: Cria nova escola"""
     try:
@@ -182,6 +260,7 @@ def api_criar_escola():
 
 
 @app.route('/api/visitas', methods=['GET'])
+@login_required
 def api_visitas():
     """API: Lista visitas com filtros opcionais"""
     escola_id = request.args.get('escola_id', type=int)
@@ -193,6 +272,7 @@ def api_visitas():
 
 
 @app.route('/api/visitas', methods=['POST'])
+@login_required
 def api_criar_visita():
     """API: Cria nova visita"""
     try:
@@ -250,6 +330,7 @@ def api_criar_visita():
 
 
 @app.route('/api/visitas/<visita_id>')
+@login_required
 def api_visita_detalhes(visita_id):
     """API: Detalhes de uma visita"""
     visita = gerenciador_visitas.obter_visita(visita_id)
@@ -259,6 +340,7 @@ def api_visita_detalhes(visita_id):
 
 
 @app.route('/api/distancia', methods=['POST'])
+@login_required
 def api_calcular_distancia():
     """API: Calcula distância entre duas escolas"""
     try:
@@ -301,6 +383,7 @@ def api_calcular_distancia():
 
 
 @app.route('/api/escolas/<int:escola_id>/proximas')
+@login_required
 def api_escolas_proximas(escola_id):
     """API: Escolas próximas a uma escola"""
     try:
@@ -331,6 +414,7 @@ def api_escolas_proximas(escola_id):
 
 
 @app.route('/api/estatisticas')
+@login_required
 def api_estatisticas():
     """API: Estatísticas gerais"""
     stats = gerenciador_visitas.obter_estatisticas()
@@ -338,6 +422,7 @@ def api_estatisticas():
 
 
 @app.route('/api/mediadores', methods=['GET'])
+@login_required
 def api_mediadores():
     """API: Lista mediadores"""
     apenas_ativos = request.args.get('apenas_ativos', 'true').lower() == 'true'
@@ -346,6 +431,7 @@ def api_mediadores():
 
 
 @app.route('/api/mediadores', methods=['POST'])
+@login_required
 def api_criar_mediador():
     """API: Cria novo mediador"""
     try:
@@ -380,6 +466,7 @@ def api_criar_mediador():
 
 
 @app.route('/api/mediadores/<int:mediador_id>', methods=['PUT'])
+@login_required
 def api_atualizar_mediador(mediador_id):
     """API: Atualiza mediador"""
     try:
@@ -415,6 +502,7 @@ def api_atualizar_mediador(mediador_id):
 
 
 @app.route('/api/relatorios/excel', methods=['POST'])
+@login_required
 def api_gerar_relatorio_excel():
     """API: Gera relatório Excel"""
     try:
@@ -438,6 +526,7 @@ def api_gerar_relatorio_excel():
 
 
 @app.route('/api/relatorios/texto', methods=['POST'])
+@login_required
 def api_gerar_relatorio_texto():
     """API: Gera relatório em texto"""
     try:
@@ -465,6 +554,7 @@ def api_gerar_relatorio_texto():
 
 
 @app.route('/api/relatorios/word', methods=['POST'])
+@login_required
 def api_gerar_relatorio_word():
     """API: Gera relatório em Word"""
     try:
@@ -488,6 +578,7 @@ def api_gerar_relatorio_word():
 
 
 @app.route('/api/relatorios/consolidado', methods=['POST'])
+@login_required
 def api_gerar_relatorio_consolidado():
     """API: Gera relatório consolidado com fotos"""
     try:
@@ -521,6 +612,7 @@ def api_gerar_relatorio_consolidado():
 # ==================== API - AGENDA/EVENTOS ====================
 
 @app.route('/api/agenda/eventos', methods=['GET'])
+@login_required
 def api_listar_eventos():
     """API: Lista todos os eventos com filtros"""
     data_inicio = request.args.get('data_inicio')
@@ -530,6 +622,7 @@ def api_listar_eventos():
 
 
 @app.route('/api/agenda/eventos', methods=['POST'])
+@login_required
 def api_criar_evento():
     """API: Cria novo evento"""
     try:
@@ -573,6 +666,7 @@ def api_criar_evento():
 
 
 @app.route('/api/agenda/eventos/<evento_id>', methods=['GET'])
+@login_required
 def api_obter_evento(evento_id):
     """API: Obtem detalhes de um evento"""
     evento = gerenciador_planejamentos.obter_evento(evento_id)
@@ -582,6 +676,7 @@ def api_obter_evento(evento_id):
 
 
 @app.route('/api/agenda/eventos/<evento_id>', methods=['PUT'])
+@login_required
 def api_atualizar_evento(evento_id):
     """API: Atualiza evento"""
     try:
@@ -606,6 +701,7 @@ def api_atualizar_evento(evento_id):
 
 
 @app.route('/api/agenda/eventos/<evento_id>', methods=['DELETE'])
+@login_required
 def api_remover_evento(evento_id):
     """API: Remove evento"""
     sucesso = gerenciador_planejamentos.remover_evento(evento_id)
@@ -615,6 +711,7 @@ def api_remover_evento(evento_id):
 
 
 @app.route('/api/agenda/eventos/<evento_id>/mover', methods=['PUT'])
+@login_required
 def api_mover_evento(evento_id):
     """API: Move evento para outra data"""
     try:
@@ -633,6 +730,7 @@ def api_mover_evento(evento_id):
 
 
 @app.route('/api/agenda/eventos/<evento_id>/executar', methods=['POST'])
+@login_required
 def api_executar_evento(evento_id):
     """API: Marca evento como executado"""
     sucesso = gerenciador_planejamentos.marcar_executado(evento_id)
@@ -642,6 +740,7 @@ def api_executar_evento(evento_id):
 
 
 @app.route('/api/agenda/eventos/executar-visita', methods=['POST'])
+@login_required
 def api_executar_visita():
     """API: Executa visita com anexo obrigatorio e registra na tabela de visitas"""
     try:
@@ -704,6 +803,7 @@ def api_executar_visita():
 
 
 @app.route('/api/agenda/eventos/<evento_id>/cancelar', methods=['POST'])
+@login_required
 def api_cancelar_evento(evento_id):
     """API: Cancela evento"""
     sucesso = gerenciador_planejamentos.cancelar_evento(evento_id)
@@ -713,6 +813,7 @@ def api_cancelar_evento(evento_id):
 
 
 @app.route('/api/agenda/eventos/<evento_id>/duplicar', methods=['POST'])
+@login_required
 def api_duplicar_evento(evento_id):
     """API: Duplica evento para outra data"""
     try:
@@ -726,6 +827,7 @@ def api_duplicar_evento(evento_id):
 
 
 @app.route('/api/agenda/semana', methods=['GET'])
+@login_required
 def api_agenda_semana():
     """API: Obtem eventos da semana"""
     data = request.args.get('data')
@@ -734,6 +836,7 @@ def api_agenda_semana():
 
 
 @app.route('/api/agenda/mes', methods=['GET'])
+@login_required
 def api_agenda_mes():
     """API: Obtem eventos do mes"""
     ano = request.args.get('ano', type=int)
@@ -743,6 +846,7 @@ def api_agenda_mes():
 
 
 @app.route('/api/agenda/mes/estatisticas', methods=['GET'])
+@login_required
 def api_estatisticas_mes():
     """API: Estatisticas do mes"""
     ano = request.args.get('ano', type=int)
