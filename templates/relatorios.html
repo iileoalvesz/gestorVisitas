@@ -11,9 +11,9 @@
     </div>
 </div>
 
-<div class="row">
-    <div class="col-md-3">
-        <div class="card">
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    <div class="col">
+        <div class="card h-100">
             <div class="card-header bg-success text-white">
                 <i class="bi bi-file-earmark-excel"></i> Relatório Excel
             </div>
@@ -50,8 +50,8 @@
         </div>
     </div>
 
-    <div class="col-md-3">
-        <div class="card">
+    <div class="col">
+        <div class="card h-100">
             <div class="card-header bg-info text-white">
                 <i class="bi bi-file-earmark-word"></i> Relatório Word
             </div>
@@ -88,8 +88,8 @@
         </div>
     </div>
 
-    <div class="col-md-3">
-        <div class="card">
+    <div class="col">
+        <div class="card h-100">
             <div class="card-header bg-warning text-white">
                 <i class="bi bi-file-earmark-image"></i> Relatório Consolidado
             </div>
@@ -126,8 +126,8 @@
         </div>
     </div>
 
-    <div class="col-md-3">
-        <div class="card">
+    <div class="col">
+        <div class="card h-100">
             <div class="card-header bg-primary text-white">
                 <i class="bi bi-file-earmark-text"></i> Relatório Texto
             </div>
@@ -160,6 +160,44 @@
                 </form>
 
                 <div id="statusTexto" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-header bg-dark text-white">
+                <i class="bi bi-clipboard-check"></i> Folha de Oficinas
+            </div>
+            <div class="card-body">
+                <p>Gera Folha de Acompanhamento de Oficinas (frente e verso):</p>
+                <ul>
+                    <li>Feedback de Oficina (frente)</li>
+                    <li>Grade de Avaliacao (verso)</li>
+                    <li>Modelo FUNCABES</li>
+                </ul>
+
+                <form id="formFolhaOficinas">
+                    <div class="mb-3">
+                        <label class="form-label">Periodo (opcional)</label>
+                        <div class="row">
+                            <div class="col-6">
+                                <input type="date" class="form-control" id="folhaDataInicio" placeholder="Data inicio">
+                            </div>
+                            <div class="col-6">
+                                <input type="date" class="form-control" id="folhaDataFim" placeholder="Data fim">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-dark">
+                            <i class="bi bi-download"></i> Gerar Folha
+                        </button>
+                    </div>
+                </form>
+
+                <div id="statusFolha" class="mt-3"></div>
             </div>
         </div>
     </div>
@@ -402,6 +440,65 @@ document.getElementById('formTexto').addEventListener('submit', async function(e
             status.innerHTML = `
                 <div class="alert alert-success">
                     <i class="bi bi-check-circle"></i> Relatório gerado e baixado com sucesso!
+                </div>
+            `;
+
+            setTimeout(() => status.innerHTML = '', 3000);
+        } else {
+            const error = await response.json();
+            status.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-x-circle"></i> ${error.erro}
+                </div>
+            `;
+        }
+    } catch (error) {
+        status.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-x-circle"></i> Erro: ${error.message}
+            </div>
+        `;
+    }
+});
+
+// Gerar Folha de Oficinas
+document.getElementById('formFolhaOficinas').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const dataInicio = document.getElementById('folhaDataInicio').value;
+    const dataFim = document.getElementById('folhaDataFim').value;
+    const status = document.getElementById('statusFolha');
+
+    status.innerHTML = `
+        <div class="alert alert-info">
+            <i class="bi bi-hourglass-split"></i> Gerando folha de oficinas...
+        </div>
+    `;
+
+    try {
+        const response = await fetch('/api/relatorios/folha-oficinas', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                data_inicio: dataInicio || null,
+                data_fim: dataFim || null
+            })
+        });
+
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `folha_oficinas_${Date.now()}.docx`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
+
+            status.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle"></i> Folha de oficinas gerada com sucesso!
                 </div>
             `;
 

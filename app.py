@@ -240,6 +240,36 @@ def api_atualizar_escola(escola_id):
         return jsonify({'erro': str(e)}), 500
 
 
+@app.route('/api/escolas/geocodificar', methods=['POST'])
+@login_required
+def api_geocodificar_escolas():
+    """API: Geocodifica escolas sem coordenadas"""
+    try:
+        escolas_bloco1 = gerenciador_escolas.listar_escolas_bloco1()
+        sem_coords = [e for e in escolas_bloco1 if 'latitude' not in e or 'longitude' not in e]
+
+        if not sem_coords:
+            return jsonify({'mensagem': 'Todas as escolas ja possuem coordenadas', 'total': 0})
+
+        sucesso = 0
+        falha = 0
+        for escola in sem_coords:
+            coords = gerenciador_escolas.obter_coordenadas(escola)
+            if coords:
+                sucesso += 1
+            else:
+                falha += 1
+
+        return jsonify({
+            'mensagem': f'Geocodificacao concluida: {sucesso} encontradas, {falha} nao encontradas',
+            'sucesso': sucesso,
+            'falha': falha,
+            'total': sucesso + falha
+        })
+    except Exception as e:
+        return jsonify({'erro': str(e)}), 500
+
+
 @app.route('/api/escolas', methods=['POST'])
 @login_required
 def api_criar_escola():
@@ -601,6 +631,30 @@ def api_gerar_relatorio_consolidado():
             visitas,
             arquivo_template=template_path
         )
+
+        return send_file(arquivo, as_attachment=True,
+                        download_name=os.path.basename(arquivo))
+
+    except Exception as e:
+        return jsonify({'erro': str(e)}), 500
+
+
+@app.route('/api/relatorios/folha-oficinas', methods=['POST'])
+@login_required
+def api_gerar_folha_oficinas():
+    """API: Gera Folha de Acompanhamento de Oficinas"""
+    try:
+        data = request.get_json()
+        escola_id = data.get('escola_id')
+        data_inicio = data.get('data_inicio')
+        data_fim = data.get('data_fim')
+
+        visitas = gerenciador_visitas.listar_visitas(escola_id, data_inicio, data_fim)
+
+        if not visitas:
+            return jsonify({'erro': 'Nenhuma visita encontrada'}), 404
+
+        arquivo = gerador_relatorios.gerar_folha_oficinas(visitas)
 
         return send_file(arquivo, as_attachment=True,
                         download_name=os.path.basename(arquivo))
