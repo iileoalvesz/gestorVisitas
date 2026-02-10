@@ -79,7 +79,15 @@ class GerenciadorVisitas:
                         observacoes: str = "",
                         anexos: Optional[List[str]] = None,
                         mediador_id: Optional[int] = None,
-                        mediador_nome: str = "") -> Dict:
+                        mediador_nome: str = "",
+                        contribuicoes: str = "",
+                        combinados: str = "",
+                        oficina: str = "",
+                        turno: str = "",
+                        articulador_nome: str = "",
+                        gestor_nome: str = "",
+                        escola_nome_oficial: str = "",
+                        turmas: Optional[List[Dict]] = None) -> Dict:
         """
         Registra uma nova visita
 
@@ -89,8 +97,16 @@ class GerenciadorVisitas:
             data: Data da visita (formato: YYYY-MM-DD) ou None para hoje
             observacoes: Observações sobre a visita
             anexos: Lista de caminhos de arquivos para anexar
-            mediador_id: ID do mediador (opcional)
-            mediador_nome: Nome do mediador (opcional)
+            mediador_id: ID do mediador (opcional, legado)
+            mediador_nome: Nome do mediador/profissional
+            contribuicoes: Contribuições/sugestões
+            combinados: Combinados da visita
+            oficina: Nome da oficina
+            turno: Turno da visita
+            articulador_nome: Nome do articulador (usuario logado)
+            gestor_nome: Nome do gestor/diretor da escola
+            escola_nome_oficial: Nome oficial da escola
+            turmas: Lista de turmas com avaliacao [{turma, num_estudantes, tema, avaliacao}]
 
         Returns:
             Dicionário com dados da visita criada
@@ -119,11 +135,19 @@ class GerenciadorVisitas:
             'id': id_visita,
             'escola_id': escola_id,
             'escola_nome': escola_nome,
+            'escola_nome_oficial': escola_nome_oficial,
             'data': data,
             'hora': hora,
+            'turno': turno,
+            'oficina': oficina,
             'observacoes': observacoes,
+            'contribuicoes': contribuicoes,
+            'combinados': combinados,
             'mediador_id': mediador_id,
             'mediador_nome': mediador_nome,
+            'articulador_nome': articulador_nome,
+            'gestor_nome': gestor_nome,
+            'turmas': turmas or [],
             'anexos': anexos_copiados,
             'criado_em': datetime.now().isoformat()
         }

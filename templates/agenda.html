@@ -332,12 +332,7 @@
                             </div>
                             <div class="col-md-6" id="mediadorGroupSimples" style="display:none;">
                                 <label class="form-label"><i class="bi bi-person"></i> Responsavel</label>
-                                <select class="form-select" id="eventoMediadorIdSimples">
-                                    <option value="">Selecione (opcional)...</option>
-                                    {% for mediador in mediadores %}
-                                    <option value="{{ mediador.id }}" data-nome="{{ mediador.nome }}">{{ mediador.nome }}</option>
-                                    {% endfor %}
-                                </select>
+                                <input type="text" class="form-control" id="eventoMediadorNomeSimples" placeholder="Nome do responsavel">
                             </div>
                         </div>
 
@@ -388,12 +383,7 @@
                                 <div class="row mb-2">
                                     <div class="col-md-6">
                                         <label class="form-label small"><i class="bi bi-person"></i> Responsavel</label>
-                                        <select class="form-select form-select-sm" id="eventoMediadorId">
-                                            <option value="">Selecione (opcional)...</option>
-                                            {% for mediador in mediadores %}
-                                            <option value="{{ mediador.id }}" data-nome="{{ mediador.nome }}">{{ mediador.nome }}</option>
-                                            {% endfor %}
-                                        </select>
+                                        <input type="text" class="form-control form-control-sm" id="eventoMediadorNome" placeholder="Nome do responsavel">
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label small"><i class="bi bi-chat-text"></i> Observacoes</label>
@@ -451,7 +441,7 @@
 
 <!-- Modal: Execucao de Visita -->
 <div class="modal fade" id="modalExecucao" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
                 <h5 class="modal-title"><i class="bi bi-check-circle-fill"></i> Registrar Execucao da Visita</h5>
@@ -461,26 +451,168 @@
                 <form id="formExecucao">
                     <input type="hidden" id="execEventoId">
 
-                    <div class="mb-3">
-                        <label class="form-label"><i class="bi bi-building"></i> Escola</label>
-                        <input type="text" class="form-control" id="execEscolaNome" readonly>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label"><i class="bi bi-building"></i> Escola</label>
+                            <input type="text" class="form-control" id="execEscolaNome" readonly>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label"><i class="bi bi-calendar"></i> Data</label>
+                            <input type="text" class="form-control" id="execData" readonly>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label"><i class="bi bi-clock"></i> Turno</label>
+                            <select class="form-select" id="execTurno">
+                                <option value="">Selecione...</option>
+                                <option value="Manha">Manha</option>
+                                <option value="Tarde">Tarde</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label"><i class="bi bi-calendar"></i> Data da Visita</label>
-                        <input type="text" class="form-control" id="execData" readonly>
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label class="form-label"><i class="bi bi-palette"></i> Oficina</label>
+                            <input type="text" class="form-control" id="execOficina" placeholder="Nome da oficina observada">
+                        </div>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label"><i class="bi bi-paperclip"></i> Anexo(s) <span class="text-danger">*</span></label>
                         <input type="file" class="form-control" id="execAnexos" multiple required accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
-                        <div class="form-text">Formatos aceitos: PDF, JPG, PNG, DOC, DOCX. Pode selecionar multiplos arquivos.</div>
+                        <div class="form-text">Formatos aceitos: PDF, JPG, PNG, DOC, DOCX.</div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label"><i class="bi bi-chat-text"></i> Observacoes</label>
-                        <textarea class="form-control" id="execObservacoes" rows="2" placeholder="Observacoes sobre a visita..."></textarea>
+                        <label class="form-label"><i class="bi bi-chat-text"></i> Observacoes das Oficinas</label>
+                        <textarea class="form-control" id="execObservacoes" rows="3" placeholder="Observacoes sobre as oficinas..."></textarea>
                     </div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><i class="bi bi-lightbulb"></i> Contribuicoes / Sugestoes</label>
+                        <textarea class="form-control" id="execContribuicoes" rows="2" placeholder="Contribuicoes e sugestoes..."></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><i class="bi bi-handshake"></i> Combinados</label>
+                        <textarea class="form-control" id="execCombinados" rows="2" placeholder="Combinados da visita..."></textarea>
+                    </div>
+
+                    <hr>
+                    <h6 class="text-primary fw-bold"><i class="bi bi-clipboard-check"></i> AVALIACAO DAS TURMAS</h6>
+                    <p class="text-muted small">Escala: OT=Otimo(6) | BO=Bom(5-4) | RE=Regular(3-2) | IN=Insatisfatorio(1) | IS=Insuficiente(0) | NO=Nao Observado</p>
+
+                    <!-- Turma 1 -->
+                    <div class="card mb-3 border-primary">
+                        <div class="card-header bg-primary text-white py-2">
+                            <strong>Turma 1</strong>
+                        </div>
+                        <div class="card-body p-2">
+                            <div class="row mb-2">
+                                <div class="col-md-4">
+                                    <label class="form-label small">Turma</label>
+                                    <input type="text" class="form-control form-control-sm" id="turma1Nome" placeholder="Ex: 3o Ano A">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small">No de Estudantes</label>
+                                    <input type="number" class="form-control form-control-sm" id="turma1NumEstudantes" placeholder="0">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small">Tema</label>
+                                    <input type="text" class="form-control form-control-sm" id="turma1Tema" placeholder="Tema da aula">
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered mb-0" id="gradeAvaliacao1">
+                                    <thead class="table-primary">
+                                        <tr>
+                                            <th style="width:30%">FOCO / INDICADOR</th>
+                                            <th class="text-center" style="width:11.6%">OT</th>
+                                            <th class="text-center" style="width:11.6%">BO</th>
+                                            <th class="text-center" style="width:11.6%">RE</th>
+                                            <th class="text-center" style="width:11.6%">IN</th>
+                                            <th class="text-center" style="width:11.6%">IS</th>
+                                            <th class="text-center" style="width:11.6%">NO</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="table-light"><td colspan="7" class="fw-bold small">1. ESTRUTURA PEDAGOGICA</td></tr>
+                                        <tr><td class="small">Planejamento Semanal</td><td class="text-center"><input type="radio" name="t1_ind1" value="OT"></td><td class="text-center"><input type="radio" name="t1_ind1" value="BO"></td><td class="text-center"><input type="radio" name="t1_ind1" value="RE"></td><td class="text-center"><input type="radio" name="t1_ind1" value="IN"></td><td class="text-center"><input type="radio" name="t1_ind1" value="IS"></td><td class="text-center"><input type="radio" name="t1_ind1" value="NO"></td></tr>
+                                        <tr><td class="small">Conteudo corresponde ao planejamento</td><td class="text-center"><input type="radio" name="t1_ind2" value="OT"></td><td class="text-center"><input type="radio" name="t1_ind2" value="BO"></td><td class="text-center"><input type="radio" name="t1_ind2" value="RE"></td><td class="text-center"><input type="radio" name="t1_ind2" value="IN"></td><td class="text-center"><input type="radio" name="t1_ind2" value="IS"></td><td class="text-center"><input type="radio" name="t1_ind2" value="NO"></td></tr>
+                                        <tr><td class="small">Conteudo corresponde ao curriculo</td><td class="text-center"><input type="radio" name="t1_ind3" value="OT"></td><td class="text-center"><input type="radio" name="t1_ind3" value="BO"></td><td class="text-center"><input type="radio" name="t1_ind3" value="RE"></td><td class="text-center"><input type="radio" name="t1_ind3" value="IN"></td><td class="text-center"><input type="radio" name="t1_ind3" value="IS"></td><td class="text-center"><input type="radio" name="t1_ind3" value="NO"></td></tr>
+                                        <tr class="table-light"><td colspan="7" class="fw-bold small">2. ORGANIZACAO DA OFICINA</td></tr>
+                                        <tr><td class="small">Material adequado a atividade e faixa etaria</td><td class="text-center"><input type="radio" name="t1_ind4" value="OT"></td><td class="text-center"><input type="radio" name="t1_ind4" value="BO"></td><td class="text-center"><input type="radio" name="t1_ind4" value="RE"></td><td class="text-center"><input type="radio" name="t1_ind4" value="IN"></td><td class="text-center"><input type="radio" name="t1_ind4" value="IS"></td><td class="text-center"><input type="radio" name="t1_ind4" value="NO"></td></tr>
+                                        <tr><td class="small">Organizacao do espaco fisico</td><td class="text-center"><input type="radio" name="t1_ind5" value="OT"></td><td class="text-center"><input type="radio" name="t1_ind5" value="BO"></td><td class="text-center"><input type="radio" name="t1_ind5" value="RE"></td><td class="text-center"><input type="radio" name="t1_ind5" value="IN"></td><td class="text-center"><input type="radio" name="t1_ind5" value="IS"></td><td class="text-center"><input type="radio" name="t1_ind5" value="NO"></td></tr>
+                                        <tr class="table-light"><td colspan="7" class="fw-bold small">3. GESTAO DA OFICINA</td></tr>
+                                        <tr><td class="small">Adequacao de atividades x tempo da oficina</td><td class="text-center"><input type="radio" name="t1_ind6" value="OT"></td><td class="text-center"><input type="radio" name="t1_ind6" value="BO"></td><td class="text-center"><input type="radio" name="t1_ind6" value="RE"></td><td class="text-center"><input type="radio" name="t1_ind6" value="IN"></td><td class="text-center"><input type="radio" name="t1_ind6" value="IS"></td><td class="text-center"><input type="radio" name="t1_ind6" value="NO"></td></tr>
+                                        <tr><td class="small">Pontualidade no atendimento</td><td class="text-center"><input type="radio" name="t1_ind7" value="OT"></td><td class="text-center"><input type="radio" name="t1_ind7" value="BO"></td><td class="text-center"><input type="radio" name="t1_ind7" value="RE"></td><td class="text-center"><input type="radio" name="t1_ind7" value="IN"></td><td class="text-center"><input type="radio" name="t1_ind7" value="IS"></td><td class="text-center"><input type="radio" name="t1_ind7" value="NO"></td></tr>
+                                        <tr><td class="small">Desenvolvimento das atividades</td><td class="text-center"><input type="radio" name="t1_ind8" value="OT"></td><td class="text-center"><input type="radio" name="t1_ind8" value="BO"></td><td class="text-center"><input type="radio" name="t1_ind8" value="RE"></td><td class="text-center"><input type="radio" name="t1_ind8" value="IN"></td><td class="text-center"><input type="radio" name="t1_ind8" value="IS"></td><td class="text-center"><input type="radio" name="t1_ind8" value="NO"></td></tr>
+                                        <tr class="table-light"><td colspan="7" class="fw-bold small">4. CLIMA DA OFICINA</td></tr>
+                                        <tr><td class="small">Estimulo as atitudes/valores</td><td class="text-center"><input type="radio" name="t1_ind9" value="OT"></td><td class="text-center"><input type="radio" name="t1_ind9" value="BO"></td><td class="text-center"><input type="radio" name="t1_ind9" value="RE"></td><td class="text-center"><input type="radio" name="t1_ind9" value="IN"></td><td class="text-center"><input type="radio" name="t1_ind9" value="IS"></td><td class="text-center"><input type="radio" name="t1_ind9" value="NO"></td></tr>
+                                        <tr><td class="small">Relacionamento com os estudantes</td><td class="text-center"><input type="radio" name="t1_ind10" value="OT"></td><td class="text-center"><input type="radio" name="t1_ind10" value="BO"></td><td class="text-center"><input type="radio" name="t1_ind10" value="RE"></td><td class="text-center"><input type="radio" name="t1_ind10" value="IN"></td><td class="text-center"><input type="radio" name="t1_ind10" value="IS"></td><td class="text-center"><input type="radio" name="t1_ind10" value="NO"></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Turma 2 (opcional) -->
+                    <div class="card mb-3 border-secondary">
+                        <div class="card-header bg-secondary text-white py-2 d-flex justify-content-between align-items-center">
+                            <strong>Turma 2 (opcional)</strong>
+                            <button type="button" class="btn btn-sm btn-outline-light" onclick="toggleTurma2()">
+                                <i class="bi bi-chevron-down" id="iconTurma2"></i>
+                            </button>
+                        </div>
+                        <div class="card-body p-2" id="turma2Body" style="display:none;">
+                            <div class="row mb-2">
+                                <div class="col-md-4">
+                                    <label class="form-label small">Turma</label>
+                                    <input type="text" class="form-control form-control-sm" id="turma2Nome" placeholder="Ex: 4o Ano B">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small">No de Estudantes</label>
+                                    <input type="number" class="form-control form-control-sm" id="turma2NumEstudantes" placeholder="0">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small">Tema</label>
+                                    <input type="text" class="form-control form-control-sm" id="turma2Tema" placeholder="Tema da aula">
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered mb-0" id="gradeAvaliacao2">
+                                    <thead class="table-secondary">
+                                        <tr>
+                                            <th style="width:30%">FOCO / INDICADOR</th>
+                                            <th class="text-center" style="width:11.6%">OT</th>
+                                            <th class="text-center" style="width:11.6%">BO</th>
+                                            <th class="text-center" style="width:11.6%">RE</th>
+                                            <th class="text-center" style="width:11.6%">IN</th>
+                                            <th class="text-center" style="width:11.6%">IS</th>
+                                            <th class="text-center" style="width:11.6%">NO</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="table-light"><td colspan="7" class="fw-bold small">1. ESTRUTURA PEDAGOGICA</td></tr>
+                                        <tr><td class="small">Planejamento Semanal</td><td class="text-center"><input type="radio" name="t2_ind1" value="OT"></td><td class="text-center"><input type="radio" name="t2_ind1" value="BO"></td><td class="text-center"><input type="radio" name="t2_ind1" value="RE"></td><td class="text-center"><input type="radio" name="t2_ind1" value="IN"></td><td class="text-center"><input type="radio" name="t2_ind1" value="IS"></td><td class="text-center"><input type="radio" name="t2_ind1" value="NO"></td></tr>
+                                        <tr><td class="small">Conteudo corresponde ao planejamento</td><td class="text-center"><input type="radio" name="t2_ind2" value="OT"></td><td class="text-center"><input type="radio" name="t2_ind2" value="BO"></td><td class="text-center"><input type="radio" name="t2_ind2" value="RE"></td><td class="text-center"><input type="radio" name="t2_ind2" value="IN"></td><td class="text-center"><input type="radio" name="t2_ind2" value="IS"></td><td class="text-center"><input type="radio" name="t2_ind2" value="NO"></td></tr>
+                                        <tr><td class="small">Conteudo corresponde ao curriculo</td><td class="text-center"><input type="radio" name="t2_ind3" value="OT"></td><td class="text-center"><input type="radio" name="t2_ind3" value="BO"></td><td class="text-center"><input type="radio" name="t2_ind3" value="RE"></td><td class="text-center"><input type="radio" name="t2_ind3" value="IN"></td><td class="text-center"><input type="radio" name="t2_ind3" value="IS"></td><td class="text-center"><input type="radio" name="t2_ind3" value="NO"></td></tr>
+                                        <tr class="table-light"><td colspan="7" class="fw-bold small">2. ORGANIZACAO DA OFICINA</td></tr>
+                                        <tr><td class="small">Material adequado a atividade e faixa etaria</td><td class="text-center"><input type="radio" name="t2_ind4" value="OT"></td><td class="text-center"><input type="radio" name="t2_ind4" value="BO"></td><td class="text-center"><input type="radio" name="t2_ind4" value="RE"></td><td class="text-center"><input type="radio" name="t2_ind4" value="IN"></td><td class="text-center"><input type="radio" name="t2_ind4" value="IS"></td><td class="text-center"><input type="radio" name="t2_ind4" value="NO"></td></tr>
+                                        <tr><td class="small">Organizacao do espaco fisico</td><td class="text-center"><input type="radio" name="t2_ind5" value="OT"></td><td class="text-center"><input type="radio" name="t2_ind5" value="BO"></td><td class="text-center"><input type="radio" name="t2_ind5" value="RE"></td><td class="text-center"><input type="radio" name="t2_ind5" value="IN"></td><td class="text-center"><input type="radio" name="t2_ind5" value="IS"></td><td class="text-center"><input type="radio" name="t2_ind5" value="NO"></td></tr>
+                                        <tr class="table-light"><td colspan="7" class="fw-bold small">3. GESTAO DA OFICINA</td></tr>
+                                        <tr><td class="small">Adequacao de atividades x tempo da oficina</td><td class="text-center"><input type="radio" name="t2_ind6" value="OT"></td><td class="text-center"><input type="radio" name="t2_ind6" value="BO"></td><td class="text-center"><input type="radio" name="t2_ind6" value="RE"></td><td class="text-center"><input type="radio" name="t2_ind6" value="IN"></td><td class="text-center"><input type="radio" name="t2_ind6" value="IS"></td><td class="text-center"><input type="radio" name="t2_ind6" value="NO"></td></tr>
+                                        <tr><td class="small">Pontualidade no atendimento</td><td class="text-center"><input type="radio" name="t2_ind7" value="OT"></td><td class="text-center"><input type="radio" name="t2_ind7" value="BO"></td><td class="text-center"><input type="radio" name="t2_ind7" value="RE"></td><td class="text-center"><input type="radio" name="t2_ind7" value="IN"></td><td class="text-center"><input type="radio" name="t2_ind7" value="IS"></td><td class="text-center"><input type="radio" name="t2_ind7" value="NO"></td></tr>
+                                        <tr><td class="small">Desenvolvimento das atividades</td><td class="text-center"><input type="radio" name="t2_ind8" value="OT"></td><td class="text-center"><input type="radio" name="t2_ind8" value="BO"></td><td class="text-center"><input type="radio" name="t2_ind8" value="RE"></td><td class="text-center"><input type="radio" name="t2_ind8" value="IN"></td><td class="text-center"><input type="radio" name="t2_ind8" value="IS"></td><td class="text-center"><input type="radio" name="t2_ind8" value="NO"></td></tr>
+                                        <tr class="table-light"><td colspan="7" class="fw-bold small">4. CLIMA DA OFICINA</td></tr>
+                                        <tr><td class="small">Estimulo as atitudes/valores</td><td class="text-center"><input type="radio" name="t2_ind9" value="OT"></td><td class="text-center"><input type="radio" name="t2_ind9" value="BO"></td><td class="text-center"><input type="radio" name="t2_ind9" value="RE"></td><td class="text-center"><input type="radio" name="t2_ind9" value="IN"></td><td class="text-center"><input type="radio" name="t2_ind9" value="IS"></td><td class="text-center"><input type="radio" name="t2_ind9" value="NO"></td></tr>
+                                        <tr><td class="small">Relacionamento com os estudantes</td><td class="text-center"><input type="radio" name="t2_ind10" value="OT"></td><td class="text-center"><input type="radio" name="t2_ind10" value="BO"></td><td class="text-center"><input type="radio" name="t2_ind10" value="RE"></td><td class="text-center"><input type="radio" name="t2_ind10" value="IN"></td><td class="text-center"><input type="radio" name="t2_ind10" value="IS"></td><td class="text-center"><input type="radio" name="t2_ind10" value="NO"></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
                 </form>
                 <div id="alertExecucao"></div>
             </div>
@@ -709,7 +841,7 @@ function abrirModalNovo(data) {
     document.getElementById('eventoTurno').value = 'manha';
     document.getElementById('eventoHoraInicio').value = '';
     document.getElementById('eventoHoraFim').value = '';
-    document.getElementById('eventoMediadorId').value = '';
+    document.getElementById('eventoMediadorNome').value = '';
     document.getElementById('eventoDescricao').value = '';
     document.getElementById('eventoDiaInteiro').checked = false;
     document.getElementById('sugestaoContainer').innerHTML = '';
@@ -767,7 +899,7 @@ function atualizarListaEscolas() {
 function adicionarEscolaLista() {
     const escolaSelect = document.getElementById('eventoEscolaId');
     const turnoSelect = document.getElementById('eventoTurno');
-    const mediadorSelect = document.getElementById('eventoMediadorId');
+    const mediadorInput = document.getElementById('eventoMediadorNome');
     const descricaoInput = document.getElementById('eventoDescricao');
 
     if (!escolaSelect.value) {
@@ -786,14 +918,12 @@ function adicionarEscolaLista() {
         return;
     }
 
-    const mediadorId = mediadorSelect.value ? parseInt(mediadorSelect.value) : null;
-    const mediadorNome = mediadorId ? mediadorSelect.options[mediadorSelect.selectedIndex].dataset.nome : '';
+    const mediadorNome = mediadorInput.value || '';
 
     escolasParaAdicionar.push({
         escola_id: escolaId,
         escola_nome: escolaNome,
         turno: turnoSelect.value,
-        mediador_id: mediadorId,
         mediador_nome: mediadorNome,
         descricao: descricaoInput.value
     });
@@ -865,15 +995,12 @@ function adicionarEscolaSugerida(escolaId, escolaNome) {
         return;
     }
 
-    const mediadorSelect = document.getElementById('eventoMediadorId');
-    const mediadorId = mediadorSelect.value ? parseInt(mediadorSelect.value) : null;
-    const mediadorNome = mediadorId ? mediadorSelect.options[mediadorSelect.selectedIndex].dataset.nome : '';
+    const mediadorNome = document.getElementById('eventoMediadorNome').value || '';
 
     escolasParaAdicionar.push({
         escola_id: escolaId,
         escola_nome: escolaNome,
         turno: 'tarde', // Padrao para sugerida
-        mediador_id: mediadorId,
         mediador_nome: mediadorNome,
         descricao: 'Escola proxima sugerida'
     });
@@ -910,7 +1037,6 @@ async function salvarEvento() {
                     escola_id: escola.escola_id,
                     escola_nome: escola.escola_nome,
                     descricao: escola.descricao,
-                    mediador_id: escola.mediador_id,
                     mediador_nome: escola.mediador_nome,
                     dia_inteiro: false
                 };
@@ -955,9 +1081,8 @@ async function salvarEvento() {
         return;
     }
 
-    const mediadorSelect = document.getElementById('eventoMediadorIdSimples');
-    const mediadorId = mediadorSelect && mediadorSelect.value ? parseInt(mediadorSelect.value) : null;
-    const mediadorNome = mediadorId ? mediadorSelect.options[mediadorSelect.selectedIndex].dataset.nome : '';
+    const mediadorInput = document.getElementById('eventoMediadorNomeSimples');
+    const mediadorNome = mediadorInput ? mediadorInput.value : '';
 
     const payload = {
         tipo: tipo,
@@ -970,7 +1095,6 @@ async function salvarEvento() {
         escola_nome: escolaNome,
         local: document.getElementById('eventoLocal').value,
         descricao: document.getElementById('eventoDescricaoSimples')?.value || '',
-        mediador_id: mediadorId,
         mediador_nome: mediadorNome,
         dia_inteiro: document.getElementById('eventoDiaInteiro').checked
     };
@@ -1032,8 +1156,8 @@ function editarEvento() {
     document.getElementById('eventoHoraInicio').value = e.hora_inicio || '';
     document.getElementById('eventoHoraFim').value = e.hora_fim || '';
 
-    if (document.getElementById('eventoMediadorIdSimples')) {
-        document.getElementById('eventoMediadorIdSimples').value = e.mediador_id || '';
+    if (document.getElementById('eventoMediadorNomeSimples')) {
+        document.getElementById('eventoMediadorNomeSimples').value = e.mediador_nome || '';
     }
     if (document.getElementById('eventoDescricaoSimples')) {
         document.getElementById('eventoDescricaoSimples').value = e.descricao || '';
@@ -1047,6 +1171,47 @@ function editarEvento() {
     new bootstrap.Modal(document.getElementById('modalEvento')).show();
 }
 
+function toggleTurma2() {
+    const body = document.getElementById('turma2Body');
+    const icon = document.getElementById('iconTurma2');
+    if (body.style.display === 'none') {
+        body.style.display = '';
+        icon.className = 'bi bi-chevron-up';
+    } else {
+        body.style.display = 'none';
+        icon.className = 'bi bi-chevron-down';
+    }
+}
+
+function coletarAvaliacaoTurma(prefix) {
+    const avaliacao = {};
+    for (let i = 1; i <= 10; i++) {
+        const selected = document.querySelector(`input[name="${prefix}_ind${i}"]:checked`);
+        avaliacao[`ind${i}`] = selected ? selected.value : '';
+    }
+    return avaliacao;
+}
+
+function limparFormExecucao() {
+    document.getElementById('execAnexos').value = '';
+    document.getElementById('execObservacoes').value = '';
+    document.getElementById('execContribuicoes').value = '';
+    document.getElementById('execCombinados').value = '';
+    document.getElementById('execOficina').value = '';
+    document.getElementById('execTurno').value = '';
+    document.getElementById('turma1Nome').value = '';
+    document.getElementById('turma1NumEstudantes').value = '';
+    document.getElementById('turma1Tema').value = '';
+    document.getElementById('turma2Nome').value = '';
+    document.getElementById('turma2NumEstudantes').value = '';
+    document.getElementById('turma2Tema').value = '';
+    document.getElementById('turma2Body').style.display = 'none';
+    document.getElementById('iconTurma2').className = 'bi bi-chevron-down';
+    document.getElementById('alertExecucao').innerHTML = '';
+    // Limpa radios
+    document.querySelectorAll('#formExecucao input[type="radio"]').forEach(r => r.checked = false);
+}
+
 async function marcarExecutado() {
     const id = document.getElementById('acaoEventoId').value;
     const tipo = document.getElementById('acaoEventoTipo').value;
@@ -1056,12 +1221,11 @@ async function marcarExecutado() {
     if (tipo === 'visita' && evento) {
         bootstrap.Modal.getInstance(document.getElementById('modalAcoes')).hide();
 
+        limparFormExecucao();
         document.getElementById('execEventoId').value = id;
         document.getElementById('execEscolaNome').value = evento.escola_nome || evento.titulo || '';
         document.getElementById('execData').value = evento.data;
-        document.getElementById('execAnexos').value = '';
-        document.getElementById('execObservacoes').value = '';
-        document.getElementById('alertExecucao').innerHTML = '';
+        if (evento.turno) document.getElementById('execTurno').value = evento.turno;
 
         new bootstrap.Modal(document.getElementById('modalExecucao')).show();
         return;
@@ -1102,17 +1266,42 @@ async function removerEvento() {
     carregarDados();
 }
 
-// Confirmar execucao de visita com anexo
+// Confirmar execucao de visita com anexo e avaliacao
 async function confirmarExecucao() {
     const alertEl = document.getElementById('alertExecucao');
     const eventoId = document.getElementById('execEventoId').value;
     const anexosInput = document.getElementById('execAnexos');
     const observacoes = document.getElementById('execObservacoes').value;
+    const contribuicoes = document.getElementById('execContribuicoes').value;
+    const combinados = document.getElementById('execCombinados').value;
+    const oficina = document.getElementById('execOficina').value;
+    const turno = document.getElementById('execTurno').value;
 
     // Valida anexo obrigatorio
     if (!anexosInput.files || anexosInput.files.length === 0) {
         alertEl.innerHTML = '<div class="alert alert-danger py-2">Anexo e obrigatorio para registrar a execucao da visita.</div>';
         return;
+    }
+
+    // Coleta dados das turmas
+    const turmas = [];
+    const t1Nome = document.getElementById('turma1Nome').value;
+    if (t1Nome) {
+        turmas.push({
+            turma: t1Nome,
+            num_estudantes: document.getElementById('turma1NumEstudantes').value || '0',
+            tema: document.getElementById('turma1Tema').value || '',
+            avaliacao: coletarAvaliacaoTurma('t1')
+        });
+    }
+    const t2Nome = document.getElementById('turma2Nome').value;
+    if (t2Nome) {
+        turmas.push({
+            turma: t2Nome,
+            num_estudantes: document.getElementById('turma2NumEstudantes').value || '0',
+            tema: document.getElementById('turma2Tema').value || '',
+            avaliacao: coletarAvaliacaoTurma('t2')
+        });
     }
 
     alertEl.innerHTML = '<div class="alert alert-info py-2"><i class="bi bi-hourglass-split"></i> Salvando...</div>';
@@ -1121,6 +1310,11 @@ async function confirmarExecucao() {
         const formData = new FormData();
         formData.append('evento_id', eventoId);
         formData.append('observacoes', observacoes);
+        formData.append('contribuicoes', contribuicoes);
+        formData.append('combinados', combinados);
+        formData.append('oficina', oficina);
+        formData.append('turno', turno);
+        formData.append('turmas', JSON.stringify(turmas));
 
         for (let i = 0; i < anexosInput.files.length; i++) {
             formData.append('anexos', anexosInput.files[i]);

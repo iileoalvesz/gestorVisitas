@@ -40,22 +40,6 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="mediador_id" class="form-label">
-                            <i class="bi bi-person-fill"></i> Mediador Responsável
-                        </label>
-                        <select class="form-select" id="mediador_id" name="mediador_id">
-                            <option value="">Selecione um mediador (opcional)...</option>
-                            {% for mediador in mediadores %}
-                            <option value="{{ mediador.id }}">{{ mediador.nome }}{% if mediador.cargo %} - {{ mediador.cargo }}{% endif %}</option>
-                            {% endfor %}
-                        </select>
-                        <small class="text-muted">
-                            Caso não encontre o mediador,
-                            <a href="/mediadores" target="_blank">cadastre aqui</a>
-                        </small>
-                    </div>
-
-                    <div class="mb-3">
                         <label for="observacoes" class="form-label">
                             <i class="bi bi-chat-text"></i> Observações
                         </label>

@@ -568,18 +568,38 @@ class GeradorRelatorios:
         cell.paragraphs[0].paragraph_format.space_before = Pt(1)
         cell.paragraphs[0].paragraph_format.space_after = Pt(1)
 
+    # Indicadores corretos da avaliacao FUNCABES
+    INDICADORES_AVALIACAO = [
+        ("1. ESTRUTURA PEDAGOGICA", [
+            ("ind1", "Planejamento Semanal"),
+            ("ind2", "Conteudo corresponde ao planejamento"),
+            ("ind3", "Conteudo corresponde ao curriculo"),
+        ]),
+        ("2. ORGANIZACAO DA OFICINA", [
+            ("ind4", "Material adequado a atividade e faixa etaria"),
+            ("ind5", "Organizacao do espaco fisico"),
+        ]),
+        ("3. GESTAO DA OFICINA", [
+            ("ind6", "Adequacao de atividades x tempo da oficina"),
+            ("ind7", "Pontualidade no atendimento"),
+            ("ind8", "Desenvolvimento das atividades"),
+        ]),
+        ("4. CLIMA DA OFICINA", [
+            ("ind9", "Estimulo as atitudes/valores"),
+            ("ind10", "Relacionamento com os estudantes"),
+        ]),
+    ]
+
+    ESCALA_VALORES = {
+        "OT": "X", "BO": "X", "RE": "X", "IN": "X", "IS": "X", "NO": "X"
+    }
+
     def gerar_folha_oficinas(self, visitas: List[Dict],
                              arquivo: Optional[str] = None) -> str:
         """
         Gera Folha de Acompanhamento de Oficinas (Frente e Verso)
         Baseado no modelo FUNCABES - Feedback de Oficina
-
-        Args:
-            visitas: Lista de visitas para gerar folhas
-            arquivo: Nome do arquivo (opcional)
-
-        Returns:
-            Caminho do arquivo gerado
+        Dados preenchidos a partir dos registros de visita
         """
         if arquivo is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -612,30 +632,58 @@ class GeradorRelatorios:
         doc.save(caminho_completo)
         return caminho_completo
 
+    def _gerar_cabecalho_funcabes(self, doc):
+        """Gera cabecalho institucional FUNCABES com logos"""
+        # Tenta usar logos se existirem
+        logo_funcabes = os.path.join('static', 'img', 'logo_funcabes.png')
+        logo_cidade = os.path.join('static', 'img', 'logo_taubate.png')
+
+        header_table = doc.add_table(rows=1, cols=3)
+        header_table.alignment = WD_TABLE_ALIGNMENT.CENTER
+
+        # Logo esquerda (FUNCABES)
+        cell_logo_l = header_table.cell(0, 0)
+        cell_logo_l.width = Cm(3)
+        if os.path.exists(logo_funcabes):
+            p_logo = cell_logo_l.paragraphs[0]
+            p_logo.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            run_logo = p_logo.add_run()
+            run_logo.add_picture(logo_funcabes, width=Cm(2.5))
+        else:
+            self._add_cell_text(cell_logo_l, "FUNCABES", bold=True, size=8, alignment=WD_ALIGN_PARAGRAPH.CENTER)
+
+        # Texto institucional central
+        cell_centro = header_table.cell(0, 1)
+        cell_centro.width = Cm(12)
+        p_centro = cell_centro.paragraphs[0]
+        p_centro.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+        texto_inst = (
+            "Instituida pela resolucao No12/82 do Conselho Universitario da UNITAU\n"
+            "CNPJ:51.637.593/0001-32\n"
+            "Av. Nove de Julho, 245, Centro, Taubate/SP- CEP:12020-200\n"
+            "TEL:3633-3855 - www.funcabes.com.br - funcabes@uol.com.br"
+        )
+        run_centro = p_centro.add_run(texto_inst)
+        run_centro.font.size = Pt(7)
+        run_centro.font.name = 'Arial'
+
+        # Logo direita (Cidade)
+        cell_logo_r = header_table.cell(0, 2)
+        cell_logo_r.width = Cm(3)
+        if os.path.exists(logo_cidade):
+            p_logo_r = cell_logo_r.paragraphs[0]
+            p_logo_r.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            run_logo_r = p_logo_r.add_run()
+            run_logo_r.add_picture(logo_cidade, width=Cm(2.5))
+        else:
+            self._add_cell_text(cell_logo_r, "TAUBATE", bold=True, size=8, alignment=WD_ALIGN_PARAGRAPH.CENTER)
+
     def _gerar_frente_folha(self, doc, visita):
         """Gera a frente da folha (Feedback de Oficina)"""
 
         # === CABECALHO INSTITUCIONAL ===
-        header_table = doc.add_table(rows=1, cols=1)
-        header_table.alignment = WD_TABLE_ALIGNMENT.CENTER
-        cell = header_table.cell(0, 0)
-        self._set_cell_shading(cell, "1F4E79")
-        self._set_cell_border(cell)
-
-        p = cell.paragraphs[0]
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p.add_run("FUNCABES - Fundacao Comunitaria de Amparo, Bem Estar e Servicos")
-        run.font.size = Pt(11)
-        run.font.bold = True
-        run.font.color.rgb = RGBColor(255, 255, 255)
-        run.font.name = 'Arial'
-
-        p2 = cell.add_paragraph()
-        p2.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run2 = p2.add_run("Convenio no 24.480/2025 - Programa Futuro em Acao")
-        run2.font.size = Pt(9)
-        run2.font.color.rgb = RGBColor(255, 255, 255)
-        run2.font.name = 'Arial'
+        self._gerar_cabecalho_funcabes(doc)
 
         doc.add_paragraph()
 
@@ -648,36 +696,32 @@ class GeradorRelatorios:
 
         p_titulo = cell_titulo.paragraphs[0]
         p_titulo.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run_titulo = p_titulo.add_run("FOLHA DE ACOMPANHAMENTO DE OFICINAS")
+        run_titulo = p_titulo.add_run("FEEDBACK DE OFICINA")
         run_titulo.font.size = Pt(13)
         run_titulo.font.bold = True
         run_titulo.font.color.rgb = RGBColor(255, 255, 255)
         run_titulo.font.name = 'Arial'
 
-        p_sub = cell_titulo.add_paragraph()
-        p_sub.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run_sub = p_sub.add_run("FEEDBACK DE OFICINA")
-        run_sub.font.size = Pt(11)
-        run_sub.font.bold = True
-        run_sub.font.color.rgb = RGBColor(255, 255, 255)
-        run_sub.font.name = 'Arial'
-
         doc.add_paragraph()
 
-        # === DADOS DA VISITA ===
-        escola_nome = visita.get('escola_nome', '')
+        # === DADOS DA VISITA (preenchidos com dados reais) ===
+        escola_nome_oficial = visita.get('escola_nome_oficial', visita.get('escola_nome', ''))
         data_visita = self._formatar_data(visita.get('data', ''))
+        turno = visita.get('turno', '')
         mediador_nome = visita.get('mediador_nome', '')
+        articulador_nome = visita.get('articulador_nome', '')
+        gestor_nome = visita.get('gestor_nome', '')
 
-        dados_table = doc.add_table(rows=5, cols=2)
+        dados_table = doc.add_table(rows=6, cols=2)
         dados_table.alignment = WD_TABLE_ALIGNMENT.CENTER
 
         campos = [
-            ("Unidade Escolar:", escola_nome),
-            ("Gestor(a):", ""),
-            ("Articulador(a):", mediador_nome),
-            ("Profissional:", ""),
+            ("Unidade Escolar:", escola_nome_oficial),
+            ("Gestor(a):", gestor_nome),
+            ("Articulador(a):", articulador_nome),
+            ("Profissional:", mediador_nome),
             ("Data:", data_visita),
+            ("Turno:", turno),
         ]
 
         for i, (label, valor) in enumerate(campos):
@@ -696,11 +740,11 @@ class GeradorRelatorios:
 
         doc.add_paragraph()
 
-        # === AREAS DE TEXTO ===
+        # === AREAS DE TEXTO (preenchidas com dados da visita) ===
         areas = [
-            ("OBSERVACOES", visita.get('observacoes', '')),
-            ("CONTRIBUICOES", ""),
-            ("COMBINADOS", ""),
+            ("OBSERVACOES DAS OFICINAS", visita.get('observacoes', '')),
+            ("CONTRIBUICOES / SUGESTOES", visita.get('contribuicoes', '')),
+            ("COMBINADOS", visita.get('combinados', '')),
         ]
 
         for titulo_area, conteudo in areas:
@@ -727,7 +771,7 @@ class GeradorRelatorios:
             if conteudo:
                 self._add_cell_text(cell_b, conteudo, size=10)
             else:
-                for _ in range(4):
+                for _ in range(3):
                     p_line = cell_b.add_paragraph()
                     p_line.paragraph_format.space_before = Pt(0)
                     p_line.paragraph_format.space_after = Pt(0)
@@ -738,9 +782,10 @@ class GeradorRelatorios:
 
         # === ASSINATURAS ===
         doc.add_paragraph()
-        assin_table = doc.add_table(rows=2, cols=3)
+        assin_table = doc.add_table(rows=3, cols=3)
         assin_table.alignment = WD_TABLE_ALIGNMENT.CENTER
 
+        # Linhas de assinatura
         for col in range(3):
             cell_linha = assin_table.cell(0, col)
             p_linha = cell_linha.paragraphs[0]
@@ -749,9 +794,20 @@ class GeradorRelatorios:
             run_linha.font.size = Pt(9)
             run_linha.font.name = 'Arial'
 
-        labels_assin = ["Gestor(a)", "Articulador(a)", "Profissional"]
+        # Nomes
+        nomes_assin = [mediador_nome, articulador_nome, gestor_nome]
+        for col, nome in enumerate(nomes_assin):
+            cell_nome = assin_table.cell(1, col)
+            p_nome = cell_nome.paragraphs[0]
+            p_nome.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            run_nome = p_nome.add_run(nome)
+            run_nome.font.size = Pt(8)
+            run_nome.font.name = 'Arial'
+
+        # Labels
+        labels_assin = ["Funcionario", "Articulador(a)", "Gestor(a)"]
         for col, label in enumerate(labels_assin):
-            cell_label = assin_table.cell(1, col)
+            cell_label = assin_table.cell(2, col)
             p_label = cell_label.paragraphs[0]
             p_label.alignment = WD_ALIGN_PARAGRAPH.CENTER
             run_label = p_label.add_run(label)
@@ -760,31 +816,38 @@ class GeradorRelatorios:
             run_label.font.name = 'Arial'
 
     def _gerar_verso_folha(self, doc, visita):
-        """Gera o verso da folha (Grade de Avaliacao)"""
+        """Gera o verso da folha (Grade de Avaliacao) com dados preenchidos"""
 
-        escola_nome = visita.get('escola_nome', '')
+        escola_nome_oficial = visita.get('escola_nome_oficial', visita.get('escola_nome', ''))
+        articulador_nome = visita.get('articulador_nome', '')
+        gestor_nome = visita.get('gestor_nome', '')
+        data_visita = self._formatar_data(visita.get('data', ''))
+        oficina = visita.get('oficina', '')
+        turmas = visita.get('turmas', [])
 
         # === CABECALHO ===
-        header_table = doc.add_table(rows=1, cols=1)
-        header_table.alignment = WD_TABLE_ALIGNMENT.CENTER
-        cell = header_table.cell(0, 0)
-        self._set_cell_shading(cell, "1F4E79")
-        self._set_cell_border(cell)
+        self._gerar_cabecalho_funcabes(doc)
 
-        p = cell.paragraphs[0]
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p.add_run("AVALIACAO DA OFICINA")
-        run.font.size = Pt(13)
-        run.font.bold = True
-        run.font.color.rgb = RGBColor(255, 255, 255)
-        run.font.name = 'Arial'
+        doc.add_paragraph()
 
-        p2 = cell.add_paragraph()
-        p2.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run2 = p2.add_run(f"Unidade Escolar: {escola_nome}")
-        run2.font.size = Pt(10)
-        run2.font.color.rgb = RGBColor(255, 255, 255)
-        run2.font.name = 'Arial'
+        # === DADOS DO VERSO ===
+        info_table = doc.add_table(rows=2, cols=2)
+        info_table.alignment = WD_TABLE_ALIGNMENT.CENTER
+
+        campos_info = [
+            ("Articulador(a):", articulador_nome),
+            ("Data:", data_visita),
+            ("Unidade Escolar:", escola_nome_oficial),
+            ("Oficina:", oficina),
+        ]
+
+        for i in range(2):
+            for j in range(2):
+                idx = i * 2 + j
+                cell = info_table.cell(i, j)
+                self._set_cell_border(cell)
+                label, valor = campos_info[idx]
+                self._add_cell_text(cell, f"{label} {valor}", bold=False, size=9)
 
         doc.add_paragraph()
 
@@ -794,8 +857,8 @@ class GeradorRelatorios:
 
         escalas = [
             ("OTIMO", "6"),
-            ("BOM", "5-4"),
-            ("REG", "3-2"),
+            ("BOM", "5 a 4"),
+            ("REG", "3 a 2"),
             ("INSAT", "1"),
             ("INSUF", "0"),
             ("NAO Obs", "X"),
@@ -807,34 +870,49 @@ class GeradorRelatorios:
             self._set_cell_shading(cell_esc, "D9E2F3")
             p_esc = cell_esc.paragraphs[0]
             p_esc.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            run_esc = p_esc.add_run(f"{nome}\n{valor}")
+            run_esc = p_esc.add_run(f"{nome}\n({valor})")
             run_esc.font.size = Pt(7)
             run_esc.font.bold = True
             run_esc.font.name = 'Arial'
 
         doc.add_paragraph()
 
-        # === GRADE DE AVALIACAO ===
-        indicadores = [
-            ("1. ESTRUTURA PEDAGOGICA", [
-                "Planejamento alinhado ao curriculo",
-                "Objetivos de aprendizagem definidos",
-                "Materiais e recursos adequados",
-            ]),
-            ("2. ORGANIZACAO DA OFICINA", [
-                "Organizacao do espaco fisico",
-                "Distribuicao do tempo",
-                "Sequencia didatica coerente",
-            ]),
-            ("3. GESTAO DA OFICINA", [
-                "Dominio do conteudo pelo profissional",
-                "Mediacao e intervencoes pedagogicas",
-            ]),
-            ("4. CLIMA DA OFICINA", [
-                "Participacao e engajamento dos alunos",
-                "Ambiente acolhedor e respeitoso",
-            ]),
-        ]
+        # Garante pelo menos 2 slots de turma
+        while len(turmas) < 2:
+            turmas.append({'turma': '', 'num_estudantes': '', 'tema': '', 'avaliacao': {}})
+
+        # === INFO DAS TURMAS ===
+        turma_info_table = doc.add_table(rows=3, cols=2)
+        turma_info_table.alignment = WD_TABLE_ALIGNMENT.CENTER
+
+        for t_idx in range(2):
+            turma = turmas[t_idx] if t_idx < len(turmas) else {}
+            cell_header = turma_info_table.cell(0, t_idx)
+            self._set_cell_border(cell_header)
+            self._set_cell_shading(cell_header, "2E75B6")
+            p_h = cell_header.paragraphs[0]
+            p_h.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            run_h = p_h.add_run(f"TURMA {t_idx + 1}")
+            run_h.font.size = Pt(9)
+            run_h.font.bold = True
+            run_h.font.color.rgb = RGBColor(255, 255, 255)
+            run_h.font.name = 'Arial'
+
+            cell_turma = turma_info_table.cell(1, t_idx)
+            self._set_cell_border(cell_turma)
+            turma_nome = turma.get('turma', '')
+            num_est = turma.get('num_estudantes', '')
+            self._add_cell_text(cell_turma, f"Turma: {turma_nome}    No Estudantes: {num_est}", size=8)
+
+            cell_tema = turma_info_table.cell(2, t_idx)
+            self._set_cell_border(cell_tema)
+            tema = turma.get('tema', '')
+            self._add_cell_text(cell_tema, f"Tema: {tema}", size=8)
+
+        doc.add_paragraph()
+
+        # === GRADE DE AVALIACAO COM DADOS ===
+        escala_cols = ["OT", "BO", "RE", "IN", "IS", "NO"]
 
         # 14 colunas: Foco(1) + Indicador(1) + Turma1(6) + Turma2(6)
         grade_table = doc.add_table(rows=0, cols=14)
@@ -860,7 +938,8 @@ class GeradorRelatorios:
             self._set_cell_shading(row1.cells[c], "2E75B6")
         cell_t1 = row1.cells[2]
         cell_t1.merge(row1.cells[7])
-        self._add_cell_text(cell_t1, "TURMA 1", bold=True, size=7, alignment=WD_ALIGN_PARAGRAPH.CENTER)
+        t1_label = turmas[0].get('turma', 'TURMA 1') if turmas[0].get('turma') else 'TURMA 1'
+        self._add_cell_text(cell_t1, t1_label, bold=True, size=7, alignment=WD_ALIGN_PARAGRAPH.CENTER)
         cell_t1.paragraphs[0].runs[0].font.color.rgb = RGBColor(255, 255, 255)
 
         # TURMA 2 - merge cells 8-13
@@ -869,7 +948,8 @@ class GeradorRelatorios:
             self._set_cell_shading(row1.cells[c], "2E75B6")
         cell_t2 = row1.cells[8]
         cell_t2.merge(row1.cells[13])
-        self._add_cell_text(cell_t2, "TURMA 2", bold=True, size=7, alignment=WD_ALIGN_PARAGRAPH.CENTER)
+        t2_label = turmas[1].get('turma', 'TURMA 2') if turmas[1].get('turma') else 'TURMA 2'
+        self._add_cell_text(cell_t2, t2_label, bold=True, size=7, alignment=WD_ALIGN_PARAGRAPH.CENTER)
         cell_t2.paragraphs[0].runs[0].font.color.rgb = RGBColor(255, 255, 255)
 
         # Linha 2: sub-headers OT/BO/RE/IN/IS/NO
@@ -879,19 +959,18 @@ class GeradorRelatorios:
         self._set_cell_border(row2.cells[1])
         self._set_cell_shading(row2.cells[1], "D9E2F3")
 
-        sub_headers = ["OT", "BO", "RE", "IN", "IS", "NO"]
         for turma_offset in [2, 8]:
-            for i, sh in enumerate(sub_headers):
+            for i, sh in enumerate(escala_cols):
                 cell_sh = row2.cells[turma_offset + i]
                 self._set_cell_border(cell_sh)
                 self._set_cell_shading(cell_sh, "D9E2F3")
                 self._add_cell_text(cell_sh, sh, bold=True, size=6, alignment=WD_ALIGN_PARAGRAPH.CENTER)
 
-        # Dados dos indicadores
-        for foco_nome, inds in indicadores:
+        # Dados dos indicadores com avaliacoes preenchidas
+        for foco_nome, inds in self.INDICADORES_AVALIACAO:
             first_row_idx = len(grade_table.rows)
 
-            for ind_idx, indicador in enumerate(inds):
+            for ind_key, indicador_texto in inds:
                 row_data = grade_table.add_row()
 
                 cell_foco = row_data.cells[0]
@@ -899,10 +978,22 @@ class GeradorRelatorios:
 
                 cell_ind = row_data.cells[1]
                 self._set_cell_border(cell_ind)
-                self._add_cell_text(cell_ind, indicador, size=7)
+                self._add_cell_text(cell_ind, indicador_texto, size=7)
 
-                for c in range(2, 14):
-                    self._set_cell_border(row_data.cells[c])
+                # Preenche avaliacao para cada turma
+                for t_idx, turma_offset in enumerate([2, 8]):
+                    turma_aval = {}
+                    if t_idx < len(turmas):
+                        turma_aval = turmas[t_idx].get('avaliacao', {})
+
+                    valor_selecionado = turma_aval.get(ind_key, '')
+
+                    for col_i, escala_val in enumerate(escala_cols):
+                        cell_val = row_data.cells[turma_offset + col_i]
+                        self._set_cell_border(cell_val)
+                        if valor_selecionado == escala_val:
+                            self._add_cell_text(cell_val, "X", bold=True, size=8, alignment=WD_ALIGN_PARAGRAPH.CENTER)
+                            self._set_cell_shading(cell_val, "C6EFCE")
 
             # Merge das celulas do FOCO
             if len(inds) > 1:
@@ -915,12 +1006,35 @@ class GeradorRelatorios:
             self._set_cell_shading(first_cell, "E2EFDA")
             self._add_cell_text(first_cell, foco_nome, bold=True, size=7)
 
-        # === RODAPE ===
+        # === ASSINATURAS ===
         doc.add_paragraph()
-        rodape = doc.add_paragraph()
-        rodape.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run_rodape = rodape.add_run("FUNCABES - Convenio 24.480/2025 - Programa Futuro em Acao")
-        run_rodape.font.size = Pt(8)
-        run_rodape.font.italic = True
-        run_rodape.font.color.rgb = RGBColor(128, 128, 128)
-        run_rodape.font.name = 'Arial'
+        doc.add_paragraph()
+        assin_table = doc.add_table(rows=3, cols=2)
+        assin_table.alignment = WD_TABLE_ALIGNMENT.CENTER
+
+        for col in range(2):
+            cell_linha = assin_table.cell(0, col)
+            p_linha = cell_linha.paragraphs[0]
+            p_linha.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            run_linha = p_linha.add_run("_" * 30)
+            run_linha.font.size = Pt(9)
+            run_linha.font.name = 'Arial'
+
+        nomes_assin = [articulador_nome, gestor_nome]
+        for col, nome in enumerate(nomes_assin):
+            cell_nome = assin_table.cell(1, col)
+            p_nome = cell_nome.paragraphs[0]
+            p_nome.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            run_nome = p_nome.add_run(nome)
+            run_nome.font.size = Pt(8)
+            run_nome.font.name = 'Arial'
+
+        labels_assin = ["Articulador(a)", "Gestor(a)"]
+        for col, label in enumerate(labels_assin):
+            cell_label = assin_table.cell(2, col)
+            p_label = cell_label.paragraphs[0]
+            p_label.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            run_label = p_label.add_run(label)
+            run_label.font.size = Pt(9)
+            run_label.font.bold = True
+            run_label.font.name = 'Arial'

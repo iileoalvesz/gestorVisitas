@@ -251,7 +251,8 @@ class GerenciadorEscolas:
         return None
 
     def atualizar_escola(self, escola_id: int, nome_oficial: str = None,
-                        nome_usual: str = None, diretor: str = None) -> bool:
+                        nome_usual: str = None, diretor: str = None,
+                        mediador: str = None) -> bool:
         """Atualiza dados de uma escola"""
         for escola in self.escolas:
             if escola['id'] == escola_id:
@@ -261,18 +262,21 @@ class GerenciadorEscolas:
                     escola['nome_usual'] = nome_usual
                 if diretor is not None:
                     escola['diretor'] = diretor
+                if mediador is not None:
+                    escola['mediador'] = mediador
                 self._salvar_dados()
                 return True
         return False
 
-    def adicionar_escola(self, nome_oficial: str, nome_usual: str, diretor: str = "") -> Dict:
+    def adicionar_escola(self, nome_oficial: str, nome_usual: str, diretor: str = "", mediador: str = "") -> Dict:
         """Adiciona uma nova escola"""
         novo_id = max(e['id'] for e in self.escolas) + 1 if self.escolas else 1
         nova_escola = {
             'id': novo_id,
             'nome_oficial': nome_oficial,
             'nome_usual': nome_usual,
-            'diretor': diretor
+            'diretor': diretor,
+            'mediador': mediador
         }
         self.escolas.append(nova_escola)
         self._salvar_dados()

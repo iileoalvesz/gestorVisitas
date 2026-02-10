@@ -13,7 +13,6 @@ from escolas import GerenciadorEscolas
 from visitas import GerenciadorVisitas
 from distancias import CalculadorDistancias
 from relatorios import GeradorRelatorios
-from mediadores import GerenciadorMediadores
 from planejamento import GerenciadorPlanejamentos
 from usuarios import GerenciadorUsuarios
 
@@ -33,7 +32,6 @@ login_manager.login_message_category = 'warning'
 # Inicializa gerenciadores
 gerenciador_escolas = GerenciadorEscolas()
 gerenciador_visitas = GerenciadorVisitas()
-gerenciador_mediadores = GerenciadorMediadores()
 gerenciador_planejamentos = GerenciadorPlanejamentos()
 calculador_distancias = CalculadorDistancias()
 gerador_relatorios = GeradorRelatorios()
@@ -142,8 +140,7 @@ def visitas():
 def nova_visita():
     """Página para registrar nova visita"""
     escolas_bloco1 = gerenciador_escolas.listar_escolas_bloco1()
-    mediadores_ativos = gerenciador_mediadores.listar_mediadores(apenas_ativos=True)
-    return render_template('nova_visita.html', escolas=escolas_bloco1, mediadores=mediadores_ativos)
+    return render_template('nova_visita.html', escolas=escolas_bloco1)
 
 
 @app.route('/visitas/<visita_id>')
@@ -181,23 +178,13 @@ def mapa():
     return render_template('mapa.html', escolas=escolas_com_coords)
 
 
-@app.route('/mediadores')
-@login_required
-def mediadores():
-    """Página de gerenciamento de mediadores"""
-    todos_mediadores = gerenciador_mediadores.listar_mediadores(apenas_ativos=False)
-    escolas_bloco1 = gerenciador_escolas.listar_escolas_bloco1()
-    return render_template('mediadores.html', mediadores=todos_mediadores, escolas=escolas_bloco1)
-
-
 @app.route('/agenda')
 @app.route('/agenda/<data>')
 @login_required
 def agenda(data=None):
     """Pagina de agenda semanal para planejamento de visitas"""
     escolas_bloco1 = gerenciador_escolas.listar_escolas_bloco1()
-    mediadores_ativos = gerenciador_mediadores.listar_mediadores(apenas_ativos=True)
-    return render_template('agenda.html', escolas=escolas_bloco1, mediadores=mediadores_ativos)
+    return render_template('agenda.html', escolas=escolas_bloco1)
 
 
 # ==================== API ENDPOINTS ====================
@@ -230,7 +217,8 @@ def api_atualizar_escola(escola_id):
             escola_id,
             nome_oficial=data.get('nome_oficial'),
             nome_usual=data.get('nome_usual'),
-            diretor=data.get('diretor')
+            diretor=data.get('diretor'),
+            mediador=data.get('mediador')
         )
         if sucesso:
             escola = gerenciador_escolas.obter_escola(escola_id)
@@ -279,11 +267,12 @@ def api_criar_escola():
         nome_oficial = data.get('nome_oficial')
         nome_usual = data.get('nome_usual')
         diretor = data.get('diretor', '')
+        mediador = data.get('mediador', '')
 
         if not nome_oficial or not nome_usual:
             return jsonify({'erro': 'Nome oficial e nome usual são obrigatórios'}), 400
 
-        escola = gerenciador_escolas.adicionar_escola(nome_oficial, nome_usual, diretor)
+        escola = gerenciador_escolas.adicionar_escola(nome_oficial, nome_usual, diretor, mediador)
         return jsonify(escola), 201
     except Exception as e:
         return jsonify({'erro': str(e)}), 500
@@ -319,14 +308,8 @@ def api_criar_visita():
         if not escola:
             return jsonify({'erro': 'Escola não encontrada'}), 404
 
-        # Busca mediador se fornecido
-        mediador_id = None
-        mediador_nome = ""
-        if data.get('mediador_id'):
-            mediador_id = int(data.get('mediador_id'))
-            mediador = gerenciador_mediadores.obter_mediador(mediador_id)
-            if mediador:
-                mediador_nome = mediador['nome']
+        # Mediador vem do cadastro da escola
+        mediador_nome = escola.get('mediador', '')
 
         # Processa anexos
         anexos_paths = []
@@ -349,7 +332,6 @@ def api_criar_visita():
             data=data.get('data') if data.get('data') else None,
             observacoes=data.get('observacoes', ''),
             anexos=anexos_paths if anexos_paths else None,
-            mediador_id=mediador_id,
             mediador_nome=mediador_nome
         )
 
@@ -451,162 +433,6 @@ def api_estatisticas():
     return jsonify(stats)
 
 
-@app.route('/api/mediadores', methods=['GET'])
-@login_required
-def api_mediadores():
-    """API: Lista mediadores"""
-    apenas_ativos = request.args.get('apenas_ativos', 'true').lower() == 'true'
-    mediadores = gerenciador_mediadores.listar_mediadores(apenas_ativos)
-    return jsonify(mediadores)
-
-
-@app.route('/api/mediadores', methods=['POST'])
-@login_required
-def api_criar_mediador():
-    """API: Cria novo mediador"""
-    try:
-        data = request.get_json()
-        nome = data.get('nome')
-
-        if not nome:
-            return jsonify({'erro': 'Nome é obrigatório'}), 400
-
-        # Busca escola se fornecida
-        escola_id = data.get('escola_id')
-        escola_nome = ""
-        if escola_id:
-            for e in gerenciador_escolas.escolas:
-                if e['id'] == escola_id:
-                    escola_nome = e['nome_usual']
-                    break
-
-        mediador = gerenciador_mediadores.adicionar_mediador(
-            nome=nome,
-            cargo=data.get('cargo', ''),
-            telefone=data.get('telefone', ''),
-            email=data.get('email', ''),
-            escola_id=escola_id,
-            escola_nome=escola_nome
-        )
-
-        return jsonify(mediador), 201
-
-    except Exception as e:
-        return jsonify({'erro': str(e)}), 500
-
-
-@app.route('/api/mediadores/<int:mediador_id>', methods=['PUT'])
-@login_required
-def api_atualizar_mediador(mediador_id):
-    """API: Atualiza mediador"""
-    try:
-        data = request.get_json()
-
-        # Busca escola se fornecida
-        escola_id = data.get('escola_id')
-        escola_nome = ""
-        if escola_id:
-            for e in gerenciador_escolas.escolas:
-                if e['id'] == escola_id:
-                    escola_nome = e['nome_usual']
-                    break
-
-        sucesso = gerenciador_mediadores.atualizar_mediador(
-            mediador_id=mediador_id,
-            nome=data.get('nome'),
-            cargo=data.get('cargo'),
-            telefone=data.get('telefone'),
-            email=data.get('email'),
-            escola_id=escola_id,
-            escola_nome=escola_nome if escola_id else None
-        )
-
-        if sucesso:
-            mediador = gerenciador_mediadores.obter_mediador(mediador_id)
-            return jsonify(mediador)
-        else:
-            return jsonify({'erro': 'Mediador não encontrado'}), 404
-
-    except Exception as e:
-        return jsonify({'erro': str(e)}), 500
-
-
-@app.route('/api/relatorios/excel', methods=['POST'])
-@login_required
-def api_gerar_relatorio_excel():
-    """API: Gera relatório Excel"""
-    try:
-        data = request.get_json()
-        escola_id = data.get('escola_id')
-        data_inicio = data.get('data_inicio')
-        data_fim = data.get('data_fim')
-
-        visitas = gerenciador_visitas.listar_visitas(escola_id, data_inicio, data_fim)
-
-        if not visitas:
-            return jsonify({'erro': 'Nenhuma visita encontrada'}), 404
-
-        arquivo = gerador_relatorios.gerar_relatorio_excel(visitas)
-
-        return send_file(arquivo, as_attachment=True,
-                        download_name=os.path.basename(arquivo))
-
-    except Exception as e:
-        return jsonify({'erro': str(e)}), 500
-
-
-@app.route('/api/relatorios/texto', methods=['POST'])
-@login_required
-def api_gerar_relatorio_texto():
-    """API: Gera relatório em texto"""
-    try:
-        data = request.get_json()
-        escola_id = data.get('escola_id')
-        data_inicio = data.get('data_inicio')
-        data_fim = data.get('data_fim')
-
-        visitas = gerenciador_visitas.listar_visitas(escola_id, data_inicio, data_fim)
-
-        if not visitas:
-            return jsonify({'erro': 'Nenhuma visita encontrada'}), 404
-
-        relatorio = gerador_relatorios.gerar_relatorio_texto(visitas)
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        arquivo = gerador_relatorios.salvar_relatorio_texto(
-            relatorio, f"relatorio_{timestamp}.txt"
-        )
-
-        return send_file(arquivo, as_attachment=True,
-                        download_name=os.path.basename(arquivo))
-
-    except Exception as e:
-        return jsonify({'erro': str(e)}), 500
-
-
-@app.route('/api/relatorios/word', methods=['POST'])
-@login_required
-def api_gerar_relatorio_word():
-    """API: Gera relatório em Word"""
-    try:
-        data = request.get_json()
-        escola_id = data.get('escola_id')
-        data_inicio = data.get('data_inicio')
-        data_fim = data.get('data_fim')
-
-        visitas = gerenciador_visitas.listar_visitas(escola_id, data_inicio, data_fim)
-
-        if not visitas:
-            return jsonify({'erro': 'Nenhuma visita encontrada'}), 404
-
-        arquivo = gerador_relatorios.gerar_relatorio_word(visitas)
-
-        return send_file(arquivo, as_attachment=True,
-                        download_name=os.path.basename(arquivo))
-
-    except Exception as e:
-        return jsonify({'erro': str(e)}), 500
-
-
 @app.route('/api/relatorios/consolidado', methods=['POST'])
 @login_required
 def api_gerar_relatorio_consolidado():
@@ -642,14 +468,23 @@ def api_gerar_relatorio_consolidado():
 @app.route('/api/relatorios/folha-oficinas', methods=['POST'])
 @login_required
 def api_gerar_folha_oficinas():
-    """API: Gera Folha de Acompanhamento de Oficinas"""
+    """API: Gera Folha de Acompanhamento de Oficinas por visita ou periodo"""
     try:
         data = request.get_json()
-        escola_id = data.get('escola_id')
-        data_inicio = data.get('data_inicio')
-        data_fim = data.get('data_fim')
+        visita_id = data.get('visita_id')
 
-        visitas = gerenciador_visitas.listar_visitas(escola_id, data_inicio, data_fim)
+        if visita_id:
+            # Gera para uma visita especifica
+            visita = gerenciador_visitas.obter_visita(visita_id)
+            if not visita:
+                return jsonify({'erro': 'Visita nao encontrada'}), 404
+            visitas = [visita]
+        else:
+            # Gera para periodo
+            escola_id = data.get('escola_id')
+            data_inicio = data.get('data_inicio')
+            data_fim = data.get('data_fim')
+            visitas = gerenciador_visitas.listar_visitas(escola_id, data_inicio, data_fim)
 
         if not visitas:
             return jsonify({'erro': 'Nenhuma visita encontrada'}), 404
@@ -690,12 +525,13 @@ def api_criar_evento():
                     escola_nome = e['nome_usual']
                     break
 
-        # Busca nome do mediador se fornecido
+        # Busca mediador do cadastro da escola
         mediador_nome = data.get('mediador_nome', '')
-        if not mediador_nome and data.get('mediador_id'):
-            mediador = gerenciador_mediadores.obter_mediador(data['mediador_id'])
-            if mediador:
-                mediador_nome = mediador['nome']
+        if not mediador_nome and data.get('escola_id'):
+            for e in gerenciador_escolas.escolas:
+                if e['id'] == data['escola_id']:
+                    mediador_nome = e.get('mediador', '')
+                    break
 
         evento = gerenciador_planejamentos.adicionar_evento(
             tipo=data.get('tipo', 'outro'),
@@ -796,10 +632,14 @@ def api_executar_evento(evento_id):
 @app.route('/api/agenda/eventos/executar-visita', methods=['POST'])
 @login_required
 def api_executar_visita():
-    """API: Executa visita com anexo obrigatorio e registra na tabela de visitas"""
+    """API: Executa visita com anexo obrigatorio, dados de oficina e avaliacao"""
     try:
         evento_id = request.form.get('evento_id')
         observacoes = request.form.get('observacoes', '')
+        contribuicoes = request.form.get('contribuicoes', '')
+        combinados = request.form.get('combinados', '')
+        oficina = request.form.get('oficina', '')
+        turno = request.form.get('turno', '')
 
         # Busca o evento
         evento = gerenciador_planejamentos.obter_evento(evento_id)
@@ -832,6 +672,23 @@ def api_executar_visita():
         if not anexos_paths:
             return jsonify({'erro': 'Nenhum anexo valido foi enviado'}), 400
 
+        # Busca dados da escola (mediador, diretor, nome_oficial)
+        escola = gerenciador_escolas.obter_escola(evento.get('escola_id'))
+        mediador_nome = escola.get('mediador', '') if escola else ''
+        gestor_nome = escola.get('diretor', '') if escola else ''
+        escola_nome_oficial = escola.get('nome_oficial', '') if escola else ''
+
+        # Processa turmas e avaliacoes do formulario
+        turmas_data = []
+        turmas_json = request.form.get('turmas', '[]')
+        try:
+            turmas_data = json.loads(turmas_json)
+        except (json.JSONDecodeError, TypeError):
+            turmas_data = []
+
+        # Articulador e o usuario logado
+        articulador_nome = current_user.nome_exibicao if current_user.is_authenticated else ''
+
         # Registra visita na tabela de visitas
         visita = gerenciador_visitas.registrar_visita(
             escola_id=evento.get('escola_id'),
@@ -839,8 +696,15 @@ def api_executar_visita():
             data=evento.get('data'),
             observacoes=observacoes if observacoes else evento.get('descricao', ''),
             anexos=anexos_paths,
-            mediador_id=evento.get('mediador_id'),
-            mediador_nome=evento.get('mediador_nome', '')
+            mediador_nome=mediador_nome,
+            contribuicoes=contribuicoes,
+            combinados=combinados,
+            oficina=oficina,
+            turno=turno,
+            articulador_nome=articulador_nome,
+            gestor_nome=gestor_nome,
+            escola_nome_oficial=escola_nome_oficial,
+            turmas=turmas_data
         )
 
         # Marca evento como executado

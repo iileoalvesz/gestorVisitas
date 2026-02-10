@@ -11,83 +11,7 @@
     </div>
 </div>
 
-<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-    <div class="col">
-        <div class="card h-100">
-            <div class="card-header bg-success text-white">
-                <i class="bi bi-file-earmark-excel"></i> Relatório Excel
-            </div>
-            <div class="card-body">
-                <p>Gera relatório completo em formato Excel com múltiplas abas:</p>
-                <ul>
-                    <li>Todas as visitas</li>
-                    <li>Resumo por escola</li>
-                    <li>Resumo por data</li>
-                </ul>
-
-                <form id="formExcel">
-                    <div class="mb-3">
-                        <label class="form-label">Período (opcional)</label>
-                        <div class="row">
-                            <div class="col-6">
-                                <input type="date" class="form-control" id="excelDataInicio" placeholder="Data início">
-                            </div>
-                            <div class="col-6">
-                                <input type="date" class="form-control" id="excelDataFim" placeholder="Data fim">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-success">
-                            <i class="bi bi-download"></i> Gerar Excel
-                        </button>
-                    </div>
-                </form>
-
-                <div id="statusExcel" class="mt-3"></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col">
-        <div class="card h-100">
-            <div class="card-header bg-info text-white">
-                <i class="bi bi-file-earmark-word"></i> Relatório Word
-            </div>
-            <div class="card-body">
-                <p>Gera relatório em formato Word (.docx) com:</p>
-                <ul>
-                    <li>Formatação profissional</li>
-                    <li>Visitas agrupadas por escola</li>
-                    <li>Detalhes do mediador</li>
-                </ul>
-
-                <form id="formWord">
-                    <div class="mb-3">
-                        <label class="form-label">Período (opcional)</label>
-                        <div class="row">
-                            <div class="col-6">
-                                <input type="date" class="form-control" id="wordDataInicio" placeholder="Data início">
-                            </div>
-                            <div class="col-6">
-                                <input type="date" class="form-control" id="wordDataFim" placeholder="Data fim">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-info text-white">
-                            <i class="bi bi-download"></i> Gerar Word
-                        </button>
-                    </div>
-                </form>
-
-                <div id="statusWord" class="mt-3"></div>
-            </div>
-        </div>
-    </div>
-
+<div class="row row-cols-1 row-cols-md-2 g-4">
     <div class="col">
         <div class="card h-100">
             <div class="card-header bg-warning text-white">
@@ -128,44 +52,6 @@
 
     <div class="col">
         <div class="card h-100">
-            <div class="card-header bg-primary text-white">
-                <i class="bi bi-file-earmark-text"></i> Relatório Texto
-            </div>
-            <div class="card-body">
-                <p>Gera relatório em formato texto (.txt) com:</p>
-                <ul>
-                    <li>Visitas agrupadas por escola</li>
-                    <li>Detalhes completos</li>
-                    <li>Lista de anexos</li>
-                </ul>
-
-                <form id="formTexto">
-                    <div class="mb-3">
-                        <label class="form-label">Período (opcional)</label>
-                        <div class="row">
-                            <div class="col-6">
-                                <input type="date" class="form-control" id="textoDataInicio" placeholder="Data início">
-                            </div>
-                            <div class="col-6">
-                                <input type="date" class="form-control" id="textoDataFim" placeholder="Data fim">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-download"></i> Gerar Texto
-                        </button>
-                    </div>
-                </form>
-
-                <div id="statusTexto" class="mt-3"></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col">
-        <div class="card h-100">
             <div class="card-header bg-dark text-white">
                 <i class="bi bi-clipboard-check"></i> Folha de Oficinas
             </div>
@@ -173,16 +59,16 @@
                 <p>Gera Folha de Acompanhamento de Oficinas (frente e verso):</p>
                 <ul>
                     <li>Feedback de Oficina (frente)</li>
-                    <li>Grade de Avaliacao (verso)</li>
+                    <li>Grade de Avaliação (verso)</li>
                     <li>Modelo FUNCABES</li>
                 </ul>
 
                 <form id="formFolhaOficinas">
                     <div class="mb-3">
-                        <label class="form-label">Periodo (opcional)</label>
+                        <label class="form-label">Período (opcional)</label>
                         <div class="row">
                             <div class="col-6">
-                                <input type="date" class="form-control" id="folhaDataInicio" placeholder="Data inicio">
+                                <input type="date" class="form-control" id="folhaDataInicio" placeholder="Data início">
                             </div>
                             <div class="col-6">
                                 <input type="date" class="form-control" id="folhaDataFim" placeholder="Data fim">
@@ -212,10 +98,8 @@
             <ul class="mb-0">
                 <li>Deixe as datas em branco para gerar relatório de todas as visitas</li>
                 <li>Use as datas para filtrar por período específico</li>
-                <li>Os relatórios são salvos automaticamente na pasta <code>relatorios/</code></li>
-                <li>Arquivos Excel podem ser abertos no Excel, LibreOffice ou Google Sheets</li>
-                <li><strong>Relatório Consolidado:</strong> Use o template em <code>Downloads/RelatorioConsolidado.docx</code> para personalizar o cabeçalho e layout</li>
-                <li>O relatório consolidado inclui automaticamente fotos das visitas (formatos JPG, JPEG, PNG)</li>
+                <li><strong>Relatório Consolidado:</strong> Inclui automaticamente fotos das visitas</li>
+                <li><strong>Folha de Oficinas:</strong> Também pode ser gerada ao concluir uma visita na Agenda</li>
             </ul>
         </div>
     </div>
@@ -225,124 +109,6 @@
 
 {% block extra_js %}
 <script>
-// Gerar relatório Excel
-document.getElementById('formExcel').addEventListener('submit', async function(e) {
-    e.preventDefault();
-
-    const dataInicio = document.getElementById('excelDataInicio').value;
-    const dataFim = document.getElementById('excelDataFim').value;
-    const status = document.getElementById('statusExcel');
-
-    status.innerHTML = `
-        <div class="alert alert-info">
-            <i class="bi bi-hourglass-split"></i> Gerando relatório Excel...
-        </div>
-    `;
-
-    try {
-        const response = await fetch('/api/relatorios/excel', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                data_inicio: dataInicio || null,
-                data_fim: dataFim || null
-            })
-        });
-
-        if (response.ok) {
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `relatorio_${Date.now()}.xlsx`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            a.remove();
-
-            status.innerHTML = `
-                <div class="alert alert-success">
-                    <i class="bi bi-check-circle"></i> Relatório gerado e baixado com sucesso!
-                </div>
-            `;
-
-            setTimeout(() => status.innerHTML = '', 3000);
-        } else {
-            const error = await response.json();
-            status.innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="bi bi-x-circle"></i> ${error.erro}
-                </div>
-            `;
-        }
-    } catch (error) {
-        status.innerHTML = `
-            <div class="alert alert-danger">
-                <i class="bi bi-x-circle"></i> Erro: ${error.message}
-            </div>
-        `;
-    }
-});
-
-// Gerar relatório Word
-document.getElementById('formWord').addEventListener('submit', async function(e) {
-    e.preventDefault();
-
-    const dataInicio = document.getElementById('wordDataInicio').value;
-    const dataFim = document.getElementById('wordDataFim').value;
-    const status = document.getElementById('statusWord');
-
-    status.innerHTML = `
-        <div class="alert alert-info">
-            <i class="bi bi-hourglass-split"></i> Gerando relatório Word...
-        </div>
-    `;
-
-    try {
-        const response = await fetch('/api/relatorios/word', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                data_inicio: dataInicio || null,
-                data_fim: dataFim || null
-            })
-        });
-
-        if (response.ok) {
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `relatorio_${Date.now()}.docx`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            a.remove();
-
-            status.innerHTML = `
-                <div class="alert alert-success">
-                    <i class="bi bi-check-circle"></i> Relatório gerado e baixado com sucesso!
-                </div>
-            `;
-
-            setTimeout(() => status.innerHTML = '', 3000);
-        } else {
-            const error = await response.json();
-            status.innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="bi bi-x-circle"></i> ${error.erro}
-                </div>
-            `;
-        }
-    } catch (error) {
-        status.innerHTML = `
-            <div class="alert alert-danger">
-                <i class="bi bi-x-circle"></i> Erro: ${error.message}
-            </div>
-        `;
-    }
-});
-
 // Gerar relatório Consolidado
 document.getElementById('formConsolidado').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -381,65 +147,6 @@ document.getElementById('formConsolidado').addEventListener('submit', async func
             status.innerHTML = `
                 <div class="alert alert-success">
                     <i class="bi bi-check-circle"></i> Relatório consolidado gerado com sucesso!
-                </div>
-            `;
-
-            setTimeout(() => status.innerHTML = '', 3000);
-        } else {
-            const error = await response.json();
-            status.innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="bi bi-x-circle"></i> ${error.erro}
-                </div>
-            `;
-        }
-    } catch (error) {
-        status.innerHTML = `
-            <div class="alert alert-danger">
-                <i class="bi bi-x-circle"></i> Erro: ${error.message}
-            </div>
-        `;
-    }
-});
-
-// Gerar relatório Texto
-document.getElementById('formTexto').addEventListener('submit', async function(e) {
-    e.preventDefault();
-
-    const dataInicio = document.getElementById('textoDataInicio').value;
-    const dataFim = document.getElementById('textoDataFim').value;
-    const status = document.getElementById('statusTexto');
-
-    status.innerHTML = `
-        <div class="alert alert-info">
-            <i class="bi bi-hourglass-split"></i> Gerando relatório em texto...
-        </div>
-    `;
-
-    try {
-        const response = await fetch('/api/relatorios/texto', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                data_inicio: dataInicio || null,
-                data_fim: dataFim || null
-            })
-        });
-
-        if (response.ok) {
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `relatorio_${Date.now()}.txt`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            a.remove();
-
-            status.innerHTML = `
-                <div class="alert alert-success">
-                    <i class="bi bi-check-circle"></i> Relatório gerado e baixado com sucesso!
                 </div>
             `;
 

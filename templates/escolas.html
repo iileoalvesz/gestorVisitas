@@ -38,7 +38,8 @@
                                 <th>ID</th>
                                 <th>Nome Usual</th>
                                 <th>Nome Oficial</th>
-                                <th>Diretor(a)</th>
+                                <th>Diretor(a)/Gestor(a)</th>
+                                <th>Mediador(a)</th>
                                 <th class="text-center">Coordenadas</th>
                                 <th class="text-center">Ações</th>
                             </tr>
@@ -53,6 +54,7 @@
                                 </td>
                                 <td class="text-muted">{{ escola.nome_oficial }}</td>
                                 <td>{{ escola.diretor or '-' }}</td>
+                                <td>{{ escola.mediador or '-' }}</td>
                                 <td class="text-center">
                                     {% if escola.latitude and escola.longitude %}
                                         <span class="badge bg-success">
@@ -66,7 +68,7 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group btn-group-sm">
-                                        <button class="btn btn-outline-secondary" onclick="editarEscola({{ escola.id }}, '{{ escola.nome_oficial|e }}', '{{ escola.nome_usual|e }}', '{{ escola.diretor|default('', true)|e }}')" title="Editar">
+                                        <button class="btn btn-outline-secondary" onclick="editarEscola({{ escola.id }}, '{{ escola.nome_oficial|e }}', '{{ escola.nome_usual|e }}', '{{ escola.diretor|default('', true)|e }}', '{{ escola.mediador|default('', true)|e }}')" title="Editar">
                                             <i class="bi bi-pencil"></i>
                                         </button>
                                         <a href="/visitas/nova?escola_id={{ escola.id }}" class="btn btn-outline-primary" title="Registrar Visita">
@@ -110,8 +112,12 @@
                         <input type="text" class="form-control" id="nomeUsual" required placeholder="Ex: João Silva">
                     </div>
                     <div class="mb-3">
-                        <label for="diretor" class="form-label">Diretor(a)</label>
+                        <label for="diretor" class="form-label">Diretor(a)/Gestor(a)</label>
                         <input type="text" class="form-control" id="diretor" placeholder="Nome do(a) diretor(a)">
+                    </div>
+                    <div class="mb-3">
+                        <label for="mediador" class="form-label">Mediador(a)/Profissional</label>
+                        <input type="text" class="form-control" id="mediador" placeholder="Nome do(a) mediador(a)">
                     </div>
                 </form>
                 <div id="alertNovaEscola"></div>
@@ -146,8 +152,12 @@
                         <input type="text" class="form-control" id="editNomeUsual" required>
                     </div>
                     <div class="mb-3">
-                        <label for="editDiretor" class="form-label">Diretor(a)</label>
+                        <label for="editDiretor" class="form-label">Diretor(a)/Gestor(a)</label>
                         <input type="text" class="form-control" id="editDiretor">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editMediador" class="form-label">Mediador(a)/Profissional</label>
+                        <input type="text" class="form-control" id="editMediador">
                     </div>
                 </form>
                 <div id="alertEditarEscola"></div>
@@ -172,7 +182,8 @@ async function salvarNovaEscola() {
     const data = {
         nome_oficial: document.getElementById('nomeOficial').value,
         nome_usual: document.getElementById('nomeUsual').value,
-        diretor: document.getElementById('diretor').value
+        diretor: document.getElementById('diretor').value,
+        mediador: document.getElementById('mediador').value
     };
 
     if (!data.nome_oficial || !data.nome_usual) {
@@ -241,11 +252,12 @@ async function geocodificarEscolas() {
     }, 5000);
 }
 
-function editarEscola(id, nomeOficial, nomeUsual, diretor) {
+function editarEscola(id, nomeOficial, nomeUsual, diretor, mediador) {
     document.getElementById('editEscolaId').value = id;
     document.getElementById('editNomeOficial').value = nomeOficial;
     document.getElementById('editNomeUsual').value = nomeUsual;
     document.getElementById('editDiretor').value = diretor || '';
+    document.getElementById('editMediador').value = mediador || '';
 
     const modal = new bootstrap.Modal(document.getElementById('modalEditarEscola'));
     modal.show();
@@ -256,7 +268,8 @@ async function atualizarEscola() {
     const data = {
         nome_oficial: document.getElementById('editNomeOficial').value,
         nome_usual: document.getElementById('editNomeUsual').value,
-        diretor: document.getElementById('editDiretor').value
+        diretor: document.getElementById('editDiretor').value,
+        mediador: document.getElementById('editMediador').value
     };
 
     if (!data.nome_oficial || !data.nome_usual) {
