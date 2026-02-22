@@ -138,14 +138,18 @@
 .tipo-reuniao { border-left-color: #3b82f6; background: #eff6ff; }
 .tipo-feriado { border-left-color: #ef4444; background: #fef2f2; }
 .tipo-apresentacao { border-left-color: #8b5cf6; background: #f5f3ff; }
-.tipo-capacitacao { border-left-color: #10b981; background: #ecfdf5; }
+.tipo-capacitacao { border-left-color: #504d72; background: #ecfdf5; }
+.tipo-planejamento { border-left-color: #10b981; background: #ecfdf5; }
+.tipo-relatorio { border-left-color: #811278; background: #ecfdf5; }
 .tipo-outro { border-left-color: #6b7280; background: #f9fafb; }
 
 .dot-visita { background: #f59e0b; }
 .dot-reuniao { background: #3b82f6; }
 .dot-feriado { background: #ef4444; }
 .dot-apresentacao { background: #8b5cf6; }
-.dot-capacitacao { background: #10b981; }
+.dot-capacitacao { background: #504d72; }
+.dot-planejamento { background: #10b981; }
+.dot-relatorio { background: #811278; }
 .dot-outro { background: #6b7280; }
 
 .event-card .event-title { font-weight: 600; color: #1e293b; }
@@ -271,10 +275,12 @@
         <!-- Legenda -->
         <div class="legend">
             <div class="legend-item"><div class="legend-dot dot-visita"></div>Visita</div>
-            <div class="legend-item"><div class="legend-dot dot-reuniao"></div>Reuniao</div>
+            <div class="legend-item"><div class="legend-dot dot-reuniao"></div>Reunião</div>
             <div class="legend-item"><div class="legend-dot dot-feriado"></div>Feriado</div>
-            <div class="legend-item"><div class="legend-dot dot-apresentacao"></div>Apresentacao</div>
-            <div class="legend-item"><div class="legend-dot dot-capacitacao"></div>Capacitacao</div>
+            <div class="legend-item"><div class="legend-dot dot-apresentacao"></div>Apresentação</div>
+            <div class="legend-item"><div class="legend-dot dot-capacitacao"></div>Capacitação</div>
+            <div class="legend-item"><div class="legend-dot dot-planejamento"></div>Planejamento</div>
+            <div class="legend-item"><div class="legend-dot dot-relatorio"></div>Relatório</div>
             <div class="legend-item"><div class="legend-dot dot-outro"></div>Outro</div>
         </div>
     </div>
@@ -297,9 +303,11 @@
                             <label class="form-label"><i class="bi bi-tag"></i> Tipo</label>
                             <select class="form-select" id="eventoTipo" onchange="onTipoChange()">
                                 <option value="visita">Visita a Escola</option>
-                                <option value="reuniao">Reuniao</option>
-                                <option value="apresentacao">Apresentacao</option>
-                                <option value="capacitacao">Capacitacao</option>
+                                <option value="reuniao">Reunião</option>
+                                <option value="apresentacao">Apresentação</option>
+                                <option value="capacitacao">Capacitação</option>
+                                <option value="planejamento">Planejamento</option>
+                                <option value="relatorio">Relatório</option>
                                 <option value="feriado">Feriado</option>
                                 <option value="outro">Outro</option>
                             </select>
