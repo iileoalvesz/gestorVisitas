@@ -111,8 +111,10 @@ class GerenciadorEscolas:
             json.dump(self.escolas, f, ensure_ascii=False, indent=2)
 
     def fazer_match_bloco1(self) -> List[Dict]:
-        """Faz o match entre as escolas do Bloco 1 e a lista completa"""
+        """Faz o match entre as escolas do Bloco 1 e a lista completa.
+        Inclui também escolas marcadas manualmente com bloco_1=true."""
         escolas_bloco1 = []
+        ids_adicionados = set()
 
         for nome_bloco in BLOCO_1:
             escola_encontrada = None
@@ -135,8 +137,15 @@ class GerenciadorEscolas:
 
             if escola_encontrada:
                 escolas_bloco1.append(escola_encontrada)
+                ids_adicionados.add(escola_encontrada['id'])
             else:
                 print(f"[AVISO]Escola não encontrada no match: {nome_bloco}")
+
+        # Inclui escolas marcadas manualmente como Bloco 1 que ainda não estão na lista
+        for escola in self.escolas:
+            if escola.get('bloco_1') and escola['id'] not in ids_adicionados:
+                escolas_bloco1.append(escola.copy())
+                ids_adicionados.add(escola['id'])
 
         return escolas_bloco1
 
@@ -164,9 +173,27 @@ class GerenciadorEscolas:
         if 'latitude' in escola and 'longitude' in escola:
             return (escola['latitude'], escola['longitude'])
 
+        coords = None
+
+        # Tenta primeiro com endereço + CEP (maior precisão)
+        if escola.get('cep') and escola.get('endereco'):
+            query = f"{escola['endereco']}, {escola['cep']}, Taubaté, SP, Brasil"
+            coords = self._geocode_com_retry(query)
+
+        # Tenta apenas com CEP
+        if not coords and escola.get('cep'):
+            query = f"{escola['cep']}, Brasil"
+            coords = self._geocode_com_retry(query)
+
+        # Tenta com endereço + cidade
+        if not coords and escola.get('endereco'):
+            query = f"{escola['endereco']}, Taubaté, SP, Brasil"
+            coords = self._geocode_com_retry(query)
+
         # Tenta geocodificar com o nome oficial
-        query = f"{escola['nome_oficial']}, Taubaté, SP, Brasil"
-        coords = self._geocode_com_retry(query)
+        if not coords:
+            query = f"{escola['nome_oficial']}, Taubaté, SP, Brasil"
+            coords = self._geocode_com_retry(query)
 
         # Se não encontrou, tenta com nome usual
         if not coords:
@@ -252,7 +279,8 @@ class GerenciadorEscolas:
 
     def atualizar_escola(self, escola_id: int, nome_oficial: str = None,
                         nome_usual: str = None, diretor: str = None,
-                        mediador: str = None) -> bool:
+                        mediador: str = None, endereco: str = None,
+                        cep: str = None, bloco_1: bool = None) -> bool:
         """Atualiza dados de uma escola"""
         for escola in self.escolas:
             if escola['id'] == escola_id:
@@ -264,11 +292,19 @@ class GerenciadorEscolas:
                     escola['diretor'] = diretor
                 if mediador is not None:
                     escola['mediador'] = mediador
+                if endereco is not None:
+                    escola['endereco'] = endereco
+                if cep is not None:
+                    escola['cep'] = cep
+                if bloco_1 is not None:
+                    escola['bloco_1'] = bloco_1
                 self._salvar_dados()
                 return True
         return False
 
-    def adicionar_escola(self, nome_oficial: str, nome_usual: str, diretor: str = "", mediador: str = "") -> Dict:
+    def adicionar_escola(self, nome_oficial: str, nome_usual: str, diretor: str = "",
+                         mediador: str = "", endereco: str = "", cep: str = "",
+                         bloco_1: bool = False) -> Dict:
         """Adiciona uma nova escola"""
         novo_id = max(e['id'] for e in self.escolas) + 1 if self.escolas else 1
         nova_escola = {
@@ -276,11 +312,22 @@ class GerenciadorEscolas:
             'nome_oficial': nome_oficial,
             'nome_usual': nome_usual,
             'diretor': diretor,
-            'mediador': mediador
+            'mediador': mediador,
+            'endereco': endereco,
+            'cep': cep,
+            'origem': 'manual',
+            'bloco_1': bloco_1
         }
         self.escolas.append(nova_escola)
         self._salvar_dados()
         return nova_escola
+
+    def listar_escolas_ativas(self) -> List[Dict]:
+        """Retorna escolas do Bloco 1 + escolas adicionadas manualmente"""
+        bloco1 = self.fazer_match_bloco1()
+        ids_bloco1 = {e['id'] for e in bloco1}
+        manuais = [e for e in self.escolas if e.get('origem') == 'manual' and e['id'] not in ids_bloco1]
+        return bloco1 + manuais
 
     def obter_escola(self, escola_id: int) -> Optional[Dict]:
         """Obtém uma escola por ID"""

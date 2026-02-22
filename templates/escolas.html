@@ -7,7 +7,7 @@
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="mb-0">
-                <i class="bi bi-building"></i> Escolas do Bloco 1
+                <i class="bi bi-building"></i> Escolas
             </h1>
             <div class="d-flex gap-2">
                 <button class="btn btn-success" onclick="geocodificarEscolas()" id="btnGeocodificar">
@@ -68,7 +68,7 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group btn-group-sm">
-                                        <button class="btn btn-outline-secondary" onclick="editarEscola({{ escola.id }}, '{{ escola.nome_oficial|e }}', '{{ escola.nome_usual|e }}', '{{ escola.diretor|default('', true)|e }}', '{{ escola.mediador|default('', true)|e }}')" title="Editar">
+                                        <button class="btn btn-outline-secondary" onclick="editarEscola({{ escola.id }}, '{{ escola.nome_oficial|e }}', '{{ escola.nome_usual|e }}', '{{ escola.diretor|default('', true)|e }}', '{{ escola.mediador|default('', true)|e }}', '{{ escola.endereco|default('', true)|e }}', '{{ escola.cep|default('', true)|e }}', {{ escola.bloco_1|default(false)|tojson }})" title="Editar">
                                             <i class="bi bi-pencil"></i>
                                         </button>
                                         <a href="/visitas/nova?escola_id={{ escola.id }}" class="btn btn-outline-primary" title="Registrar Visita">
@@ -90,8 +90,6 @@
         </div>
     </div>
 </div>
-
-{% endblock %}
 
 <!-- Modal Nova Escola -->
 <div class="modal fade" id="modalNovaEscola" tabindex="-1">
@@ -118,6 +116,20 @@
                     <div class="mb-3">
                         <label for="mediador" class="form-label">Mediador(a)/Profissional</label>
                         <input type="text" class="form-control" id="mediador" placeholder="Nome do(a) mediador(a)">
+                    </div>
+                    <div class="mb-3">
+                        <label for="endereco" class="form-label">Endereço</label>
+                        <input type="text" class="form-control" id="endereco" placeholder="Ex: Rua das Flores, 123, Bairro">
+                    </div>
+                    <div class="mb-3">
+                        <label for="cep" class="form-label">CEP</label>
+                        <input type="text" class="form-control" id="cep" placeholder="Ex: 12020-000" maxlength="9">
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="bloco1">
+                        <label class="form-check-label" for="bloco1">
+                            Associar ao <strong>Bloco 1</strong> (aparece em Agenda e Visitas)
+                        </label>
                     </div>
                 </form>
                 <div id="alertNovaEscola"></div>
@@ -159,6 +171,20 @@
                         <label for="editMediador" class="form-label">Mediador(a)/Profissional</label>
                         <input type="text" class="form-control" id="editMediador">
                     </div>
+                    <div class="mb-3">
+                        <label for="editEndereco" class="form-label">Endereço</label>
+                        <input type="text" class="form-control" id="editEndereco" placeholder="Ex: Rua das Flores, 123, Bairro">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editCep" class="form-label">CEP</label>
+                        <input type="text" class="form-control" id="editCep" placeholder="Ex: 12020-000" maxlength="9">
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="editBloco1">
+                        <label class="form-check-label" for="editBloco1">
+                            Associar ao <strong>Bloco 1</strong> (aparece em Agenda e Visitas)
+                        </label>
+                    </div>
                 </form>
                 <div id="alertEditarEscola"></div>
             </div>
@@ -172,6 +198,8 @@
     </div>
 </div>
 
+{% endblock %}
+
 {% block extra_js %}
 <script>
 function verNoMapa(lat, lng, nome) {
@@ -183,7 +211,10 @@ async function salvarNovaEscola() {
         nome_oficial: document.getElementById('nomeOficial').value,
         nome_usual: document.getElementById('nomeUsual').value,
         diretor: document.getElementById('diretor').value,
-        mediador: document.getElementById('mediador').value
+        mediador: document.getElementById('mediador').value,
+        endereco: document.getElementById('endereco').value,
+        cep: document.getElementById('cep').value,
+        bloco_1: document.getElementById('bloco1').checked
     };
 
     if (!data.nome_oficial || !data.nome_usual) {
@@ -252,12 +283,15 @@ async function geocodificarEscolas() {
     }, 5000);
 }
 
-function editarEscola(id, nomeOficial, nomeUsual, diretor, mediador) {
+function editarEscola(id, nomeOficial, nomeUsual, diretor, mediador, endereco, cep, bloco1) {
     document.getElementById('editEscolaId').value = id;
     document.getElementById('editNomeOficial').value = nomeOficial;
     document.getElementById('editNomeUsual').value = nomeUsual;
     document.getElementById('editDiretor').value = diretor || '';
     document.getElementById('editMediador').value = mediador || '';
+    document.getElementById('editEndereco').value = endereco || '';
+    document.getElementById('editCep').value = cep || '';
+    document.getElementById('editBloco1').checked = bloco1 === true || bloco1 === 'True';
 
     const modal = new bootstrap.Modal(document.getElementById('modalEditarEscola'));
     modal.show();
@@ -269,7 +303,10 @@ async function atualizarEscola() {
         nome_oficial: document.getElementById('editNomeOficial').value,
         nome_usual: document.getElementById('editNomeUsual').value,
         diretor: document.getElementById('editDiretor').value,
-        mediador: document.getElementById('editMediador').value
+        mediador: document.getElementById('editMediador').value,
+        endereco: document.getElementById('editEndereco').value,
+        cep: document.getElementById('editCep').value,
+        bloco_1: document.getElementById('editBloco1').checked
     };
 
     if (!data.nome_oficial || !data.nome_usual) {

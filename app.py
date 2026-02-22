@@ -123,8 +123,7 @@ def index():
 @login_required
 def escolas():
     """Página de listagem de escolas"""
-    escolas_bloco1 = gerenciador_escolas.listar_escolas_bloco1()
-    return render_template('escolas.html', escolas=escolas_bloco1)
+    return render_template('escolas.html', escolas=gerenciador_escolas.listar_escolas_ativas())
 
 
 @app.route('/visitas')
@@ -139,8 +138,7 @@ def visitas():
 @login_required
 def nova_visita():
     """Página para registrar nova visita"""
-    escolas_bloco1 = gerenciador_escolas.listar_escolas_bloco1()
-    return render_template('nova_visita.html', escolas=escolas_bloco1)
+    return render_template('nova_visita.html', escolas=gerenciador_escolas.listar_escolas_ativas())
 
 
 @app.route('/visitas/<visita_id>')
@@ -183,8 +181,7 @@ def mapa():
 @login_required
 def agenda(data=None):
     """Pagina de agenda semanal para planejamento de visitas"""
-    escolas_bloco1 = gerenciador_escolas.listar_escolas_bloco1()
-    return render_template('agenda.html', escolas=escolas_bloco1)
+    return render_template('agenda.html', escolas=gerenciador_escolas.listar_escolas_ativas())
 
 
 # ==================== API ENDPOINTS ====================
@@ -192,9 +189,8 @@ def agenda(data=None):
 @app.route('/api/escolas')
 @login_required
 def api_escolas():
-    """API: Lista escolas do Bloco 1"""
-    escolas_bloco1 = gerenciador_escolas.listar_escolas_bloco1()
-    return jsonify(escolas_bloco1)
+    """API: Lista escolas ativas (Bloco 1 + manuais)"""
+    return jsonify(gerenciador_escolas.listar_escolas_ativas())
 
 
 @app.route('/api/escolas/<int:escola_id>')
@@ -213,12 +209,16 @@ def api_atualizar_escola(escola_id):
     """API: Atualiza dados de uma escola"""
     try:
         data = request.get_json()
+        bloco_1 = data.get('bloco_1')
         sucesso = gerenciador_escolas.atualizar_escola(
             escola_id,
             nome_oficial=data.get('nome_oficial'),
             nome_usual=data.get('nome_usual'),
             diretor=data.get('diretor'),
-            mediador=data.get('mediador')
+            mediador=data.get('mediador'),
+            endereco=data.get('endereco'),
+            cep=data.get('cep'),
+            bloco_1=bool(bloco_1) if bloco_1 is not None else None
         )
         if sucesso:
             escola = gerenciador_escolas.obter_escola(escola_id)
@@ -268,11 +268,14 @@ def api_criar_escola():
         nome_usual = data.get('nome_usual')
         diretor = data.get('diretor', '')
         mediador = data.get('mediador', '')
+        endereco = data.get('endereco', '')
+        cep = data.get('cep', '')
+        bloco_1 = bool(data.get('bloco_1', False))
 
         if not nome_oficial or not nome_usual:
             return jsonify({'erro': 'Nome oficial e nome usual são obrigatórios'}), 400
 
-        escola = gerenciador_escolas.adicionar_escola(nome_oficial, nome_usual, diretor, mediador)
+        escola = gerenciador_escolas.adicionar_escola(nome_oficial, nome_usual, diretor, mediador, endereco, cep, bloco_1)
         return jsonify(escola), 201
     except Exception as e:
         return jsonify({'erro': str(e)}), 500
