@@ -46,6 +46,15 @@ class GerenciadorAgenda:
         with open(self.arquivo_dados, 'w', encoding='utf-8') as f:
             json.dump(self.eventos, f, ensure_ascii=False, indent=2)
 
+    def _recarregar_do_disco(self):
+        """Recarrega eventos do JSON — necessario em ambientes multi-worker (Gunicorn)"""
+        if os.path.exists(self.arquivo_dados):
+            try:
+                with open(self.arquivo_dados, 'r', encoding='utf-8') as f:
+                    self.eventos = json.load(f)
+            except (json.JSONDecodeError, IOError):
+                pass
+
     def _gerar_id(self) -> str:
         """Gera ID unico para evento"""
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S%f")
@@ -164,6 +173,7 @@ class GerenciadorAgenda:
         Returns:
             Dicionario com informacoes da semana e eventos por dia
         """
+        self._recarregar_do_disco()
         if data_referencia:
             dt = datetime.strptime(data_referencia, "%Y-%m-%d")
         else:
@@ -197,6 +207,7 @@ class GerenciadorAgenda:
         Returns:
             Dicionario com informacoes do mes e eventos por dia
         """
+        self._recarregar_do_disco()
         if ano is None:
             ano = datetime.now().year
         if mes is None:
@@ -358,6 +369,7 @@ class GerenciadorPlanejamentos(GerenciadorAgenda):
     def listar_planejamentos(self, data_inicio: str = None,
                              data_fim: str = None) -> List[Dict]:
         """Compatibilidade: lista eventos"""
+        self._recarregar_do_disco()
         resultado = self.eventos.copy()
         if data_inicio:
             resultado = [e for e in resultado if e['data'] >= data_inicio]
