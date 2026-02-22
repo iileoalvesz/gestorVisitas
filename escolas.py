@@ -239,6 +239,7 @@ class GerenciadorEscolas:
 
     def listar_escolas_bloco1(self) -> List[Dict]:
         """Lista todas as escolas do Bloco 1 com suas informações"""
+        self._recarregar_do_disco()
         return self.fazer_match_bloco1()
 
     def buscar_escola(self, termo: str) -> Optional[Dict]:
@@ -322,8 +323,15 @@ class GerenciadorEscolas:
         self._salvar_dados()
         return nova_escola
 
+    def _recarregar_do_disco(self):
+        """Recarrega escolas do JSON — necessário em ambientes multi-worker (Gunicorn)"""
+        if os.path.exists(self.arquivo_dados):
+            with open(self.arquivo_dados, 'r', encoding='utf-8') as f:
+                self.escolas = json.load(f)
+
     def listar_escolas_ativas(self) -> List[Dict]:
         """Retorna escolas do Bloco 1 + escolas adicionadas manualmente"""
+        self._recarregar_do_disco()
         bloco1 = self.fazer_match_bloco1()
         ids_bloco1 = {e['id'] for e in bloco1}
         manuais = [e for e in self.escolas if e.get('origem') == 'manual' and e['id'] not in ids_bloco1]
