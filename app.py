@@ -228,6 +228,16 @@ def api_atualizar_escola(escola_id):
         return jsonify({'erro': str(e)}), 500
 
 
+@app.route('/api/escolas/<int:escola_id>', methods=['DELETE'])
+@login_required
+def api_remover_escola(escola_id):
+    """API: Remove uma escola cadastrada manualmente"""
+    sucesso = gerenciador_escolas.remover_escola(escola_id)
+    if sucesso:
+        return jsonify({'mensagem': 'Escola removida com sucesso'})
+    return jsonify({'erro': 'Escola não encontrada ou não pode ser removida'}), 404
+
+
 @app.route('/api/escolas/geocodificar', methods=['POST'])
 @login_required
 def api_geocodificar_escolas():

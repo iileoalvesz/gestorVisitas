@@ -79,6 +79,11 @@
                                             <i class="bi bi-geo-alt"></i>
                                         </button>
                                         {% endif %}
+                                        {% if escola.origem == 'manual' %}
+                                        <button class="btn btn-outline-danger" onclick="confirmarExcluir({{ escola.id }}, '{{ escola.nome_usual|e }}')" title="Excluir">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>
@@ -198,6 +203,29 @@
     </div>
 </div>
 
+<!-- Modal Confirmar Exclusão -->
+<div class="modal fade" id="modalExcluirEscola" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-trash"></i> Excluir Escola</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir <strong id="excluirEscolaNome"></strong>?</p>
+                <p class="text-muted small">Esta ação não pode ser desfeita.</p>
+                <input type="hidden" id="excluirEscolaId">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="excluirEscola()">
+                    <i class="bi bi-trash"></i> Excluir
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -281,6 +309,27 @@ async function geocodificarEscolas() {
         btn.innerHTML = '<i class="bi bi-geo-alt"></i> Buscar Coordenadas';
         btn.className = 'btn btn-success';
     }, 5000);
+}
+
+function confirmarExcluir(id, nome) {
+    document.getElementById('excluirEscolaId').value = id;
+    document.getElementById('excluirEscolaNome').textContent = nome;
+    new bootstrap.Modal(document.getElementById('modalExcluirEscola')).show();
+}
+
+async function excluirEscola() {
+    const id = document.getElementById('excluirEscolaId').value;
+    try {
+        const response = await fetch(`/api/escolas/${id}`, { method: 'DELETE' });
+        if (response.ok) {
+            location.reload();
+        } else {
+            const error = await response.json();
+            alert(`Erro ao excluir: ${error.erro}`);
+        }
+    } catch (error) {
+        alert(`Erro: ${error.message}`);
+    }
 }
 
 function editarEscola(id, nomeOficial, nomeUsual, diretor, mediador, endereco, cep, bloco1) {

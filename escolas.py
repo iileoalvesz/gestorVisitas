@@ -337,6 +337,17 @@ class GerenciadorEscolas:
         manuais = [e for e in self.escolas if e.get('origem') == 'manual' and e['id'] not in ids_bloco1]
         return bloco1 + manuais
 
+    def remover_escola(self, escola_id: int) -> bool:
+        """Remove uma escola manual pelo ID"""
+        for i, escola in enumerate(self.escolas):
+            if escola['id'] == escola_id:
+                if escola.get('origem') != 'manual':
+                    return False  # Não permite remover escolas do sistema
+                self.escolas.pop(i)
+                self._salvar_dados()
+                return True
+        return False
+
     def obter_escola(self, escola_id: int) -> Optional[Dict]:
         """Obtém uma escola por ID"""
         for escola in self.escolas:
