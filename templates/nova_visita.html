@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load core_extras %}
 
 {% block title %}Nova Visita - Gestão de Visitas{% endblock %}
 
@@ -35,7 +36,7 @@
                         <label for="data" class="form-label">
                             <i class="bi bi-calendar"></i> Data da Visita
                         </label>
-                        <input type="date" class="form-control" id="data" name="data" value="{{ now.strftime('%Y-%m-%d') if now else '' }}">
+                        <input type="date" class="form-control" id="data" name="data">
                         <small class="text-muted">Deixe em branco para usar a data de hoje</small>
                     </div>
 
@@ -43,19 +44,21 @@
                         <label for="observacoes" class="form-label">
                             <i class="bi bi-chat-text"></i> Observações
                         </label>
-                        <textarea class="form-control" id="observacoes" name="observacoes" rows="5" placeholder="Descreva detalhes da visita, atividades realizadas, observações importantes..."></textarea>
+                        <textarea class="form-control" id="observacoes" name="observacoes" rows="5"
+                            placeholder="Descreva detalhes da visita, atividades realizadas, observações importantes..."></textarea>
                     </div>
 
                     <div class="mb-3">
                         <label for="anexos" class="form-label">
                             <i class="bi bi-paperclip"></i> Anexos/Evidências
                         </label>
-                        <input type="file" class="form-control" id="anexos" name="anexos" multiple accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
+                        <input type="file" class="form-control" id="anexos" name="anexos" multiple
+                            accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
                         <small class="text-muted">Formatos permitidos: JPG, PNG, PDF, DOC, DOCX (máx. 16MB)</small>
                     </div>
 
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <a href="/visitas" class="btn btn-outline-secondary">
+                        <a href="{% url 'visitas' %}" class="btn btn-outline-secondary">
                             <i class="bi bi-x-circle"></i> Cancelar
                         </a>
                         <button type="submit" class="btn btn-primary">
@@ -69,64 +72,55 @@
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block extra_js %}
 <script>
+// CSRF token para Django
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 document.getElementById('formVisita').addEventListener('submit', async function(e) {
     e.preventDefault();
-
     const formData = new FormData(this);
     const alertContainer = document.getElementById('alertContainer');
 
-    // Mostra loading
-    alertContainer.innerHTML = `
-        <div class="alert alert-info">
-            <i class="bi bi-hourglass-split"></i> Registrando visita...
-        </div>
-    `;
+    alertContainer.innerHTML = `<div class="alert alert-info"><i class="bi bi-hourglass-split"></i> Registrando visita...</div>`;
 
     try {
         const response = await fetch('/api/visitas', {
             method: 'POST',
+            headers: {'X-CSRFToken': getCookie('csrftoken')},
             body: formData
         });
 
         if (response.ok) {
             const visita = await response.json();
-            alertContainer.innerHTML = `
-                <div class="alert alert-success">
-                    <i class="bi bi-check-circle"></i> Visita registrada com sucesso!
-                </div>
-            `;
-
-            // Redireciona após 1.5 segundos
-            setTimeout(() => {
-                window.location.href = '/visitas/' + visita.id;
-            }, 1500);
+            alertContainer.innerHTML = `<div class="alert alert-success"><i class="bi bi-check-circle"></i> Visita registrada com sucesso!</div>`;
+            setTimeout(() => { window.location.href = '/visitas/' + visita.id; }, 1500);
         } else {
             const error = await response.json();
-            alertContainer.innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="bi bi-x-circle"></i> Erro: ${error.erro || 'Erro ao registrar visita'}
-                </div>
-            `;
+            alertContainer.innerHTML = `<div class="alert alert-danger"><i class="bi bi-x-circle"></i> Erro: ${error.erro || 'Erro ao registrar visita'}</div>`;
         }
     } catch (error) {
-        alertContainer.innerHTML = `
-            <div class="alert alert-danger">
-                <i class="bi bi-x-circle"></i> Erro de conexão: ${error.message}
-            </div>
-        `;
+        alertContainer.innerHTML = `<div class="alert alert-danger"><i class="bi bi-x-circle"></i> Erro de conexão: ${error.message}</div>`;
     }
 });
 
-// Pré-seleciona escola se vier da URL
 const urlParams = new URLSearchParams(window.location.search);
 const escolaId = urlParams.get('escola_id');
-if (escolaId) {
-    document.getElementById('escola_id').value = escolaId;
-}
+if (escolaId) document.getElementById('escola_id').value = escolaId;
 </script>
 {% endblock %}

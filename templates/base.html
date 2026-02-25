@@ -1,3 +1,4 @@
+{% load static core_extras %}
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -17,7 +18,7 @@
     <!-- Leaflet CSS para mapas -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <!-- CSS Customizado -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
 
     {% block extra_css %}{% endblock %}
 </head>
@@ -34,32 +35,32 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" href="/">
+                        <a class="nav-link {% block nav_inicio %}{% endblock %}" href="{% url 'index' %}">
                             <i class="bi bi-house-door-fill"></i> Início
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'escolas' %}active{% endif %}" href="/escolas">
+                        <a class="nav-link {% block nav_escolas %}{% endblock %}" href="{% url 'escolas' %}">
                             <i class="bi bi-building"></i> Escolas
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'agenda' %}active{% endif %}" href="/agenda">
+                        <a class="nav-link {% block nav_agenda %}{% endblock %}" href="{% url 'agenda' %}">
                             <i class="bi bi-calendar-week-fill"></i> Agenda
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'mapa' %}active{% endif %}" href="/mapa">
+                        <a class="nav-link {% block nav_mapa %}{% endblock %}" href="{% url 'mapa' %}">
                             <i class="bi bi-map-fill"></i> Mapa
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'distancias' %}active{% endif %}" href="/distancias">
+                        <a class="nav-link {% block nav_distancias %}{% endblock %}" href="{% url 'distancias' %}">
                             <i class="bi bi-signpost-2-fill"></i> Distâncias
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'relatorios' %}active{% endif %}" href="/relatorios">
+                        <a class="nav-link {% block nav_relatorios %}{% endblock %}" href="{% url 'relatorios' %}">
                             <i class="bi bi-file-earmark-text-fill"></i> Relatórios
                         </a>
                     </li>
@@ -68,12 +69,12 @@
                     <span class="text-white">
                         <i class="bi bi-geo-alt-fill"></i> Taubaté/SP
                     </span>
-                    {% if current_user.is_authenticated %}
+                    {% if user.is_authenticated %}
                     <span class="text-white-50 d-none d-md-inline">|</span>
                     <span class="text-white d-none d-md-inline">
-                        <i class="bi bi-person-circle"></i> {{ current_user.nome_exibicao or current_user.username }}
+                        <i class="bi bi-person-circle"></i> {{ user.nome_exibicao|default:user.username }}
                     </span>
-                    <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-light"
+                    <a href="{% url 'logout' %}" class="btn btn-sm btn-outline-light"
                        style="border-radius: 0.5rem; padding: 0.25rem 0.75rem;">
                         <i class="bi bi-box-arrow-right"></i> Sair
                     </a>
@@ -83,19 +84,17 @@
         </div>
     </nav>
 
-    <!-- Alert messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="container mt-3">
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
+    <!-- Alert messages (Django messages framework) -->
+    {% if messages %}
+        <div class="container mt-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
 
     <!-- Main Content -->
     <div class="main-content">

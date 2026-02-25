@@ -1,6 +1,8 @@
 {% extends "base.html" %}
+{% load core_extras %}
 
 {% block title %}Agenda - Gestao de Visitas{% endblock %}
+{% block nav_agenda %}active{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -638,6 +640,20 @@
 
 {% block extra_js %}
 <script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1)); break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 // Estado
 let viewMode = 'semana';
 let currentDate = new Date();
@@ -828,7 +844,7 @@ async function onDrop(event, novaData) {
     try {
         await fetch(`/api/agenda/eventos/${id}/mover`, {
             method: 'PUT',
-            headers: {'Content-Type': 'application/json'},
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
             body: JSON.stringify({data: novaData})
         });
         carregarDados();
@@ -1051,7 +1067,7 @@ async function salvarEvento() {
 
                 const resp = await fetch('/api/agenda/eventos', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
                     body: JSON.stringify(payload)
                 });
 
@@ -1116,7 +1132,7 @@ async function salvarEvento() {
 
         const resp = await fetch(url, {
             method: method,
-            headers: {'Content-Type': 'application/json'},
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
             body: JSON.stringify(payload)
         });
 
@@ -1240,7 +1256,7 @@ async function marcarExecutado() {
     }
 
     // Para outros tipos de evento, executa diretamente
-    await fetch(`/api/agenda/eventos/${id}/executar`, {method: 'POST'});
+    await fetch(`/api/agenda/eventos/${id}/executar`, {method: 'POST', headers: {'X-CSRFToken': getCookie('csrftoken')}});
     bootstrap.Modal.getInstance(document.getElementById('modalAcoes')).hide();
     carregarDados();
 }
@@ -1248,7 +1264,7 @@ async function marcarExecutado() {
 async function cancelarEvento() {
     if (!confirm('Cancelar este evento?')) return;
     const id = document.getElementById('acaoEventoId').value;
-    await fetch(`/api/agenda/eventos/${id}/cancelar`, {method: 'POST'});
+    await fetch(`/api/agenda/eventos/${id}/cancelar`, {method: 'POST', headers: {'X-CSRFToken': getCookie('csrftoken')}});
     bootstrap.Modal.getInstance(document.getElementById('modalAcoes')).hide();
     carregarDados();
 }
@@ -1259,7 +1275,7 @@ async function duplicarEvento() {
     if (!novaData) return;
     await fetch(`/api/agenda/eventos/${id}/duplicar`, {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
         body: JSON.stringify({data: novaData})
     });
     bootstrap.Modal.getInstance(document.getElementById('modalAcoes')).hide();
@@ -1269,7 +1285,7 @@ async function duplicarEvento() {
 async function removerEvento() {
     if (!confirm('Remover este evento permanentemente?')) return;
     const id = document.getElementById('acaoEventoId').value;
-    await fetch(`/api/agenda/eventos/${id}`, {method: 'DELETE'});
+    await fetch(`/api/agenda/eventos/${id}`, {method: 'DELETE', headers: {'X-CSRFToken': getCookie('csrftoken')}});
     bootstrap.Modal.getInstance(document.getElementById('modalAcoes')).hide();
     carregarDados();
 }
@@ -1330,6 +1346,7 @@ async function confirmarExecucao() {
 
         const resp = await fetch('/api/agenda/eventos/executar-visita', {
             method: 'POST',
+            headers: {'X-CSRFToken': getCookie('csrftoken')},
             body: formData
         });
 

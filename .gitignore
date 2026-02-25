@@ -27,14 +27,28 @@ wheels/
 data/escolas.json
 data/visitas.json
 data/matriz_distancias.json
+data/agenda.json
+data/usuarios.json
 
-# Anexos (recomendado não versionar)
+# Banco de dados SQLite
+data/db.sqlite3
+data/*.sqlite3
+
+# Anexos e uploads (recomendado não versionar)
 anexos/
+static/uploads/
 
 # Relatórios gerados
 relatorios/*.txt
 relatorios/*.xlsx
 relatorios/*.pdf
+relatorios/*.docx
+
+# Static files coletados (gerado por collectstatic)
+staticfiles/
+
+# Arquivo indevido
+nul
 
 # IDEs
 .vscode/

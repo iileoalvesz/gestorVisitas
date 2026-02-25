@@ -1,6 +1,8 @@
 {% extends "base.html" %}
+{% load core_extras %}
 
 {% block title %}Calcular Distâncias - Gestão de Visitas{% endblock %}
+{% block nav_distancias %}active{% endblock %}
 
 {% block content %}
 <div class="row">
@@ -116,6 +118,19 @@
 
 {% block extra_js %}
 <script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1)); break;
+            }
+        }
+    }
+    return cookieValue;
+}
 // Calcular distância entre duas escolas
 document.getElementById('formDistancia').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -142,7 +157,7 @@ document.getElementById('formDistancia').addEventListener('submit', async functi
     try {
         const response = await fetch('/api/distancia', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
             body: JSON.stringify({
                 escola1_id: escola1Id,
                 escola2_id: escola2Id

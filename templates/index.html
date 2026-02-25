@@ -1,6 +1,8 @@
 {% extends "base.html" %}
+{% load core_extras %}
 
 {% block title %}Dashboard - Gestão de Visitas{% endblock %}
+{% block nav_inicio %}active{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -71,7 +73,7 @@
     <!-- Menus Principais -->
     <div class="row g-4 mb-5">
         <div class="col-lg-4 col-md-6">
-            <a href="/agenda" class="text-decoration-none">
+            <a href="{% url 'agenda' %}" class="text-decoration-none">
                 <div class="menu-card">
                     <i class="bi bi-calendar-week-fill" style="color: #2563eb;"></i>
                     <h3>Agenda</h3>
@@ -79,9 +81,8 @@
                 </div>
             </a>
         </div>
-
         <div class="col-lg-4 col-md-6">
-            <a href="/escolas" class="text-decoration-none">
+            <a href="{% url 'escolas' %}" class="text-decoration-none">
                 <div class="menu-card">
                     <i class="bi bi-building-fill" style="color: #3B82F6;"></i>
                     <h3>Escolas</h3>
@@ -89,9 +90,8 @@
                 </div>
             </a>
         </div>
-
         <div class="col-lg-4 col-md-6">
-            <a href="/mapa" class="text-decoration-none">
+            <a href="{% url 'mapa' %}" class="text-decoration-none">
                 <div class="menu-card">
                     <i class="bi bi-map-fill" style="color: #06B6D4;"></i>
                     <h3>Mapa Interativo</h3>
@@ -99,9 +99,8 @@
                 </div>
             </a>
         </div>
-
         <div class="col-lg-4 col-md-6">
-            <a href="/distancias" class="text-decoration-none">
+            <a href="{% url 'distancias' %}" class="text-decoration-none">
                 <div class="menu-card">
                     <i class="bi bi-signpost-2-fill" style="color: #8B5CF6;"></i>
                     <h3>Distâncias</h3>
@@ -109,9 +108,8 @@
                 </div>
             </a>
         </div>
-
         <div class="col-lg-4 col-md-6">
-            <a href="/relatorios" class="text-decoration-none">
+            <a href="{% url 'relatorios' %}" class="text-decoration-none">
                 <div class="menu-card">
                     <i class="bi bi-file-earmark-text-fill" style="color: #F59E0B;"></i>
                     <h3>Relatórios</h3>
@@ -147,7 +145,7 @@
                                 <div>
                                     <h6 class="text-muted mb-1">Atividade Recente</h6>
                                     <h5 class="mb-1">{{ stats.total_visitas }} visitas</h5>
-                                    <p class="text-muted mb-0">Registradas em {{ stats.visitas_por_mes|length }} mês(es) de atividade</p>
+                                    <p class="text-muted mb-0">Registradas no sistema</p>
                                 </div>
                             </div>
                         </div>

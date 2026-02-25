@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # Backend Flask - Sistema de Visitas
+  # Backend Django - Sistema de Visitas
   gestor-visitas:
     image: ghcr.io/iileoalvesz/gestorvisitas:latest
     container_name: gestor_visitas_escolas
@@ -13,8 +13,9 @@ services:
     ports:
       - "${APP_PORT:-5000}:5000"
     environment:
-      - FLASK_ENV=${FLASK_ENV}
+      - DJANGO_SETTINGS_MODULE=gestor.settings
       - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=${DEBUG:-False}
     networks:
       - gestorvisitas_network
     healthcheck:
@@ -22,7 +23,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 10s
+      start_period: 30s
     restart: unless-stopped
 
 volumes:

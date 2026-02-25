@@ -1,6 +1,8 @@
 {% extends "base.html" %}
+{% load core_extras %}
 
 {% block title %}Escolas - Gestão de Visitas{% endblock %}
+{% block nav_escolas %}active{% endblock %}
 
 {% block content %}
 <div class="row">
@@ -26,7 +28,7 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-list"></i> Lista de Escolas ({{ escolas|length }} escolas)</span>
-                <a href="/mapa" class="btn btn-sm btn-primary">
+                <a href="{% url 'mapa' %}" class="btn btn-sm btn-primary">
                     <i class="bi bi-map"></i> Ver no Mapa
                 </a>
             </div>
@@ -53,8 +55,8 @@
                                     {{ escola.nome_usual }}
                                 </td>
                                 <td class="text-muted">{{ escola.nome_oficial }}</td>
-                                <td>{{ escola.diretor or '-' }}</td>
-                                <td>{{ escola.mediador or '-' }}</td>
+                                <td>{{ escola.diretor|default:"-" }}</td>
+                                <td>{{ escola.mediador|default:"-" }}</td>
                                 <td class="text-center">
                                     {% if escola.latitude and escola.longitude %}
                                         <span class="badge bg-success">
@@ -68,19 +70,21 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group btn-group-sm">
-                                        <button class="btn btn-outline-secondary" onclick="editarEscola({{ escola.id }}, '{{ escola.nome_oficial|e }}', '{{ escola.nome_usual|e }}', '{{ escola.diretor|default('', true)|e }}', '{{ escola.mediador|default('', true)|e }}', '{{ escola.endereco|default('', true)|e }}', '{{ escola.cep|default('', true)|e }}', {{ escola.bloco_1|default(false)|tojson }})" title="Editar">
+                                        <button class="btn btn-outline-secondary"
+                                            onclick="editarEscola({{ escola.id }}, '{{ escola.nome_oficial|escapejs }}', '{{ escola.nome_usual|escapejs }}', '{{ escola.diretor|escapejs }}', '{{ escola.mediador|escapejs }}', '{{ escola.endereco|escapejs }}', '{{ escola.cep|escapejs }}', {{ escola.bloco_1|bool_js }})"
+                                            title="Editar">
                                             <i class="bi bi-pencil"></i>
                                         </button>
-                                        <a href="/visitas/nova?escola_id={{ escola.id }}" class="btn btn-outline-primary" title="Registrar Visita">
+                                        <a href="{% url 'nova_visita' %}?escola_id={{ escola.id }}" class="btn btn-outline-primary" title="Registrar Visita">
                                             <i class="bi bi-plus-circle"></i>
                                         </a>
                                         {% if escola.latitude and escola.longitude %}
-                                        <button class="btn btn-outline-success" onclick="verNoMapa({{ escola.latitude }}, {{ escola.longitude }}, '{{ escola.nome_usual }}')" title="Ver no Mapa">
+                                        <button class="btn btn-outline-success" onclick="verNoMapa({{ escola.latitude }}, {{ escola.longitude }}, '{{ escola.nome_usual|escapejs }}')" title="Ver no Mapa">
                                             <i class="bi bi-geo-alt"></i>
                                         </button>
                                         {% endif %}
                                         {% if escola.origem == 'manual' %}
-                                        <button class="btn btn-outline-danger" onclick="confirmarExcluir({{ escola.id }}, '{{ escola.nome_usual|e }}')" title="Excluir">
+                                        <button class="btn btn-outline-danger" onclick="confirmarExcluir({{ escola.id }}, '{{ escola.nome_usual|escapejs }}')" title="Excluir">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                         {% endif %}
@@ -230,6 +234,20 @@
 
 {% block extra_js %}
 <script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1)); break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 function verNoMapa(lat, lng, nome) {
     window.location.href = `/mapa?lat=${lat}&lng=${lng}&escola=${encodeURIComponent(nome)}`;
 }
@@ -244,32 +262,28 @@ async function salvarNovaEscola() {
         cep: document.getElementById('cep').value,
         bloco_1: document.getElementById('bloco1').checked
     };
-
     if (!data.nome_oficial || !data.nome_usual) {
         document.getElementById('alertNovaEscola').innerHTML =
             '<div class="alert alert-warning">Nome oficial e nome usual são obrigatórios.</div>';
         return;
     }
-
-    const alert = document.getElementById('alertNovaEscola');
-    alert.innerHTML = '<div class="alert alert-info">Salvando...</div>';
-
+    const alertEl = document.getElementById('alertNovaEscola');
+    alertEl.innerHTML = '<div class="alert alert-info">Salvando...</div>';
     try {
         const response = await fetch('/api/escolas', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
             body: JSON.stringify(data)
         });
-
         if (response.ok) {
-            alert.innerHTML = '<div class="alert alert-success">Escola cadastrada com sucesso!</div>';
+            alertEl.innerHTML = '<div class="alert alert-success">Escola cadastrada com sucesso!</div>';
             setTimeout(() => location.reload(), 1000);
         } else {
             const error = await response.json();
-            alert.innerHTML = `<div class="alert alert-danger">Erro: ${error.erro}</div>`;
+            alertEl.innerHTML = `<div class="alert alert-danger">Erro: ${error.erro}</div>`;
         }
     } catch (error) {
-        alert.innerHTML = `<div class="alert alert-danger">Erro: ${error.message}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-danger">Erro: ${error.message}</div>`;
     }
 }
 
@@ -277,18 +291,15 @@ async function geocodificarEscolas() {
     const btn = document.getElementById('btnGeocodificar');
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Buscando coordenadas...';
-
     try {
         const response = await fetch('/api/escolas/geocodificar', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'}
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')}
         });
-
         const result = await response.json();
-
         if (response.ok) {
             if (result.total === 0) {
-                btn.innerHTML = '<i class="bi bi-check-circle"></i> Todas ja possuem coordenadas';
+                btn.innerHTML = '<i class="bi bi-check-circle"></i> Todas já possuem coordenadas';
                 btn.className = 'btn btn-outline-success';
             } else {
                 btn.innerHTML = `<i class="bi bi-check-circle"></i> ${result.sucesso} encontradas`;
@@ -300,10 +311,9 @@ async function geocodificarEscolas() {
             btn.className = 'btn btn-danger';
         }
     } catch (error) {
-        btn.innerHTML = '<i class="bi bi-x-circle"></i> Erro de conexao';
+        btn.innerHTML = '<i class="bi bi-x-circle"></i> Erro de conexão';
         btn.className = 'btn btn-danger';
     }
-
     setTimeout(() => {
         btn.disabled = false;
         btn.innerHTML = '<i class="bi bi-geo-alt"></i> Buscar Coordenadas';
@@ -320,7 +330,10 @@ function confirmarExcluir(id, nome) {
 async function excluirEscola() {
     const id = document.getElementById('excluirEscolaId').value;
     try {
-        const response = await fetch(`/api/escolas/${id}`, { method: 'DELETE' });
+        const response = await fetch(`/api/escolas/${id}`, {
+            method: 'DELETE',
+            headers: {'X-CSRFToken': getCookie('csrftoken')}
+        });
         if (response.ok) {
             location.reload();
         } else {
@@ -340,10 +353,8 @@ function editarEscola(id, nomeOficial, nomeUsual, diretor, mediador, endereco, c
     document.getElementById('editMediador').value = mediador || '';
     document.getElementById('editEndereco').value = endereco || '';
     document.getElementById('editCep').value = cep || '';
-    document.getElementById('editBloco1').checked = bloco1 === true || bloco1 === 'True';
-
-    const modal = new bootstrap.Modal(document.getElementById('modalEditarEscola'));
-    modal.show();
+    document.getElementById('editBloco1').checked = bloco1 === true;
+    new bootstrap.Modal(document.getElementById('modalEditarEscola')).show();
 }
 
 async function atualizarEscola() {
@@ -357,32 +368,28 @@ async function atualizarEscola() {
         cep: document.getElementById('editCep').value,
         bloco_1: document.getElementById('editBloco1').checked
     };
-
     if (!data.nome_oficial || !data.nome_usual) {
         document.getElementById('alertEditarEscola').innerHTML =
             '<div class="alert alert-warning">Nome oficial e nome usual são obrigatórios.</div>';
         return;
     }
-
-    const alert = document.getElementById('alertEditarEscola');
-    alert.innerHTML = '<div class="alert alert-info">Atualizando...</div>';
-
+    const alertEl = document.getElementById('alertEditarEscola');
+    alertEl.innerHTML = '<div class="alert alert-info">Atualizando...</div>';
     try {
         const response = await fetch(`/api/escolas/${id}`, {
             method: 'PUT',
-            headers: {'Content-Type': 'application/json'},
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
             body: JSON.stringify(data)
         });
-
         if (response.ok) {
-            alert.innerHTML = '<div class="alert alert-success">Escola atualizada com sucesso!</div>';
+            alertEl.innerHTML = '<div class="alert alert-success">Escola atualizada com sucesso!</div>';
             setTimeout(() => location.reload(), 1000);
         } else {
             const error = await response.json();
-            alert.innerHTML = `<div class="alert alert-danger">Erro: ${error.erro}</div>`;
+            alertEl.innerHTML = `<div class="alert alert-danger">Erro: ${error.erro}</div>`;
         }
     } catch (error) {
-        alert.innerHTML = `<div class="alert alert-danger">Erro: ${error.message}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-danger">Erro: ${error.message}</div>`;
     }
 }
 </script>

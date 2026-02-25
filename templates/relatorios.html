@@ -1,6 +1,8 @@
 {% extends "base.html" %}
+{% load core_extras %}
 
 {% block title %}Relatórios - Gestão de Visitas{% endblock %}
+{% block nav_relatorios %}active{% endblock %}
 
 {% block content %}
 <div class="row">
@@ -109,6 +111,19 @@
 
 {% block extra_js %}
 <script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1)); break;
+            }
+        }
+    }
+    return cookieValue;
+}
 // Gerar relatório Consolidado
 document.getElementById('formConsolidado').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -126,7 +141,7 @@ document.getElementById('formConsolidado').addEventListener('submit', async func
     try {
         const response = await fetch('/api/relatorios/consolidado', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
             body: JSON.stringify({
                 data_inicio: dataInicio || null,
                 data_fim: dataFim || null
@@ -185,7 +200,7 @@ document.getElementById('formFolhaOficinas').addEventListener('submit', async fu
     try {
         const response = await fetch('/api/relatorios/folha-oficinas', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
             body: JSON.stringify({
                 data_inicio: dataInicio || null,
                 data_fim: dataFim || null
