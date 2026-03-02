@@ -4,10 +4,11 @@ Views Django - Sistema de Gestão de Visitas às Escolas
 import json
 import os
 import shutil
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, time as dtime
 from calendar import monthrange
 
 from django.shortcuts import render, redirect, get_object_or_404
+from django.db.models import Case, When, Value, TimeField, F
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse, FileResponse
@@ -486,8 +487,29 @@ def api_folha_oficinas(request):
 # ==================== API - AGENDA/EVENTOS ====================
 
 def _evento_to_dict_semana(data_str):
-    """Retorna lista de eventos de um dia"""
-    eventos = Evento.objects.filter(data=data_str).order_by('hora_inicio', 'titulo')
+    """Retorna lista de eventos de um dia, ordenados por turno: integral→manhã→tarde→sem turno."""
+    # Hora virtual para ordenação quando hora_inicio não está preenchida
+    _HORA = {
+        'integral':    dtime(7, 0),
+        'manha':       dtime(8, 0),
+        'tarde':       dtime(13, 0),
+        'sem_turno':   dtime(23, 59),
+    }
+    eventos = (
+        Evento.objects
+        .filter(data=data_str)
+        .annotate(
+            hora_ord=Case(
+                When(hora_inicio__isnull=False, then=F('hora_inicio')),
+                When(turno='integral',   then=Value(_HORA['integral'],  output_field=TimeField())),
+                When(turno='manha',      then=Value(_HORA['manha'],     output_field=TimeField())),
+                When(turno='tarde',      then=Value(_HORA['tarde'],     output_field=TimeField())),
+                default=Value(_HORA['sem_turno'], output_field=TimeField()),
+                output_field=TimeField(),
+            )
+        )
+        .order_by('hora_ord', 'titulo')
+    )
     return [e.to_dict() for e in eventos]
 
 
@@ -604,11 +626,17 @@ def api_eventos(request):
                 except Escola.DoesNotExist:
                     pass
 
+            # Auto-preenche hora_inicio pelo turno para facilitar ordenação
+            _HORA_PADRAO_TURNO = {'integral': '08:00', 'manha': '08:00', 'tarde': '13:00'}
+            hora_inicio = data.get('hora_inicio') or None
+            if not hora_inicio and data.get('turno') in _HORA_PADRAO_TURNO:
+                hora_inicio = _HORA_PADRAO_TURNO[data['turno']]
+
             evento = Evento.objects.create(
                 tipo=data.get('tipo', 'outro'),
                 titulo=data.get('titulo', ''),
                 data=date.fromisoformat(data['data']),
-                hora_inicio=data.get('hora_inicio') or None,
+                hora_inicio=hora_inicio,
                 hora_fim=data.get('hora_fim') or None,
                 turno=data.get('turno', ''),
                 dia_inteiro=bool(data.get('dia_inteiro', False)),
