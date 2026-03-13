@@ -1,0 +1,34 @@
+:root {
+  --primary-color: #1e40af;
+  --primary-light: #3b82f6;
+  --border-radius: 0.75rem;
+  --card-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+body { background: #f0f4f8; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+.card { border: none; border-radius: var(--border-radius); box-shadow: var(--card-shadow); }
+.card-header { background: linear-gradient(135deg, var(--primary-color), var(--primary-light)); color: white; border-radius: var(--border-radius) var(--border-radius) 0 0 !important; padding: 1rem 1.25rem; font-weight: 600; }
+
+.page-title { font-size: 1.5rem; font-weight: 700; color: #1e293b; }
+.navbar-nav .nav-link { color: rgba(255,255,255,0.85) !important; padding: 0.5rem 0.75rem; border-radius: 0.4rem; transition: all 0.2s; }
+.navbar-nav .nav-link:hover, .navbar-nav .nav-link.active { color: white !important; background: rgba(255,255,255,0.15); }
+
+/* Event card colors */
+.tipo-visita { border-left: 3px solid #f59e0b; background: #fffbeb; }
+.tipo-reuniao { border-left: 3px solid #3b82f6; background: #eff6ff; }
+.tipo-feriado { border-left: 3px solid #ef4444; background: #fef2f2; }
+.tipo-apresentacao { border-left: 3px solid #8b5cf6; background: #f5f3ff; }
+.tipo-capacitacao { border-left: 3px solid #504d72; background: #ecfdf5; }
+.tipo-planejamento { border-left: 3px solid #10b981; background: #ecfdf5; }
+.tipo-relatorio { border-left: 3px solid #811278; background: #ecfdf5; }
+.tipo-outro { border-left: 3px solid #6b7280; background: #f9fafb; }
+
+.dot-visita { background: #f59e0b; }
+.dot-reuniao { background: #3b82f6; }
+.dot-feriado { background: #ef4444; }
+.dot-apresentacao { background: #8b5cf6; }
+.dot-capacitacao { background: #504d72; }
+.dot-planejamento { background: #10b981; }
+.dot-relatorio { background: #811278; }
+.dot-outro { background: #6b7280; }

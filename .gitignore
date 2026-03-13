@@ -71,3 +71,7 @@ ENV/
 
 # Variaveis de ambiente
 .env
+
+# React frontend
+frontend/node_modules/
+frontend/dist/

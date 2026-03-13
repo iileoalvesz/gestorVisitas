@@ -71,8 +71,14 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+    BASE_DIR / 'frontend' / 'dist',   # assets do build React (assets/, index.html)
+]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# React SPA index.html
+REACT_INDEX = BASE_DIR / 'frontend' / 'dist' / 'index.html'
 _staticfiles_backend = (
     "whitenoise.storage.CompressedStaticFilesStorage"
     if not DEBUG

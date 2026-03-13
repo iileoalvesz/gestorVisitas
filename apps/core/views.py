@@ -89,6 +89,50 @@ def health_check(request):
     return JsonResponse({'status': 'ok'})
 
 
+# ==================== AUTH API (React SPA) ====================
+
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.http import HttpResponse as _HttpResponse
+
+@ensure_csrf_cookie
+def react_app(request):
+    """Serve o React SPA para todas as rotas não-API."""
+    from django.conf import settings as _s
+    idx = _s.REACT_INDEX
+    if idx.exists():
+        return _HttpResponse(idx.read_text(encoding='utf-8'), content_type='text/html')
+    return _HttpResponse('React não compilado. Execute: cd frontend && npm run build', status=503)
+
+
+@require_http_methods(['GET'])
+def api_auth_me(request):
+    """Retorna usuário logado ou 401."""
+    if request.user.is_authenticated:
+        return JsonResponse({'id': request.user.pk, 'username': request.user.username, 'nome_exibicao': request.user.nome_exibicao or request.user.username})
+    return JsonResponse({'erro': 'Não autenticado'}, status=401)
+
+
+@require_http_methods(['POST'])
+def api_auth_login(request):
+    """Login via JSON para o SPA React."""
+    try:
+        data = json.loads(request.body)
+    except Exception:
+        return JsonResponse({'erro': 'JSON inválido'}, status=400)
+    user = authenticate(request, username=data.get('username', ''), password=data.get('password', ''))
+    if user and user.ativo:
+        login(request, user)
+        return JsonResponse({'id': user.pk, 'username': user.username, 'nome_exibicao': user.nome_exibicao or user.username})
+    return JsonResponse({'erro': 'Usuário ou senha inválidos'}, status=401)
+
+
+@require_http_methods(['POST'])
+def api_auth_logout(request):
+    """Logout via JSON para o SPA React."""
+    logout(request)
+    return JsonResponse({'mensagem': 'Logout realizado'})
+
+
 # ==================== PÁGINAS ====================
 
 @login_required

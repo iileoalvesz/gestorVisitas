@@ -1,24 +1,16 @@
-from django.urls import path
+from django.urls import path, re_path
 from . import views
 
 urlpatterns = [
-    # Autenticacao
+    # Auth (templates legados + SPA)
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('health', views.health_check, name='health'),
 
-    # Paginas
-    path('', views.index, name='index'),
-    path('escolas', views.escolas_view, name='escolas'),
-    path('visitas', views.visitas_view, name='visitas'),
-    path('visitas/nova', views.nova_visita_view, name='nova_visita'),
-    path('visitas/<int:visita_id>', views.detalhes_visita_view, name='detalhes_visita'),
-    path('distancias', views.distancias_view, name='distancias'),
-    path('relatorios', views.relatorios_view, name='relatorios'),
-    path('mapa', views.mapa_view, name='mapa'),
-    path('agenda', views.agenda_view, name='agenda'),
-    path('agenda/<str:data>', views.agenda_view, name='agenda_data'),
-    path('mediadores', views.mediadores_view, name='mediadores'),
+    # Auth API para React SPA
+    path('api/auth/me', views.api_auth_me, name='api_auth_me'),
+    path('api/auth/login', views.api_auth_login, name='api_auth_login'),
+    path('api/auth/logout', views.api_auth_logout, name='api_auth_logout'),
 
     # API - Escolas
     path('api/escolas', views.api_escolas, name='api_escolas'),
@@ -55,4 +47,7 @@ urlpatterns = [
     # API - Mediadores
     path('api/mediadores', views.api_mediadores, name='api_mediadores'),
     path('api/mediadores/<int:mediador_id>', views.api_mediador_detail, name='api_mediador_detail'),
+
+    # SPA React — catch-all (deve ser a última rota)
+    re_path(r'^(?!api/|admin/|static/|uploads/|health|login/|logout/).*$', views.react_app, name='react_app'),
 ]
